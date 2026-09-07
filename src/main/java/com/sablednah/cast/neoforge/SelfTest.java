@@ -123,6 +123,9 @@ public final class SelfTest {
             reloaded.goalSelector.addGoal(5, new net.minecraft.world.entity.ai.goal.FloatGoal(reloaded)); // a vanilla goal, as a reload would give it
             Npcs.reown(level, reloaded);
             check("reown strips a rebuilt body back to our goals", reloaded.goalSelector.getAvailableGoals().size() == 2);
+            Cast.setAnchored(server, zombie, false);
+            Npcs.reown(level, reloaded);
+            check("reown re-anchors a body whose mover is gone", Npcs.isAnchored(zombie));
 
             // --- packets to a viewer: must not throw ---
             FakePlayer viewer = new FakePlayer(level, new GameProfile(UUID.nameUUIDFromBytes("cast:viewer".getBytes()), "CastViewer"));

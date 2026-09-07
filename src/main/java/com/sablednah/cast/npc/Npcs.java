@@ -425,6 +425,9 @@ public final class Npcs {
         }
         Bodies.configure(mob, spec.get());
         MOBS.put(id.get(), mob);
+        // A re-joined body has lost whatever goal another mod gave it (goals die with the
+        // entity object), so an anchor that mod switched off must not outlive it either.
+        UNANCHORED.remove(id.get());
     }
 
     // --- lifecycle from events ---
