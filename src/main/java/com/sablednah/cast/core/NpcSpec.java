@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.sablednah.cast.api.NpcKind;
 
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.resources.Identifier;

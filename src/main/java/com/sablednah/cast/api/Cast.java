@@ -100,9 +100,13 @@ public final class Cast {
 
     // --- doing ---
 
-    /** Speak as the NPC to players within {@code radius}: a chat line styled with its name. */
-    public static void say(MinecraftServer server, UUID npcId, String text, double radius) {
-        Npcs.say(server, npcId, text, radius);
+    /**
+     * Speak as the NPC to players within {@code radius}: a chat line styled with
+     * its name. Returns how many heard it -- a line delivered to nobody is
+     * something a narrator needs to know.
+     */
+    public static int say(MinecraftServer server, UUID npcId, String text, double radius) {
+        return Npcs.say(server, npcId, text, radius);
     }
 
     /** Turn the NPC's face towards a point. */

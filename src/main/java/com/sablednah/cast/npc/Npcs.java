@@ -17,7 +17,7 @@ import com.sablednah.cast.api.Npc;
 import com.sablednah.cast.api.NpcHit;
 import com.sablednah.cast.api.NpcRemovedEvent;
 import com.sablednah.cast.api.Role;
-import com.sablednah.cast.core.NpcKind;
+import com.sablednah.cast.api.NpcKind;
 import com.sablednah.cast.core.NpcSpec;
 import com.sablednah.cast.core.NpcStore;
 import com.sablednah.cast.neoforge.Feedback;
@@ -246,17 +246,20 @@ public final class Npcs {
 
     // --- doing ---
 
-    public static void say(MinecraftServer server, UUID npcId, String text, double radius) {
-        NpcStore.get(server).get(npcId).ifPresent(spec -> {
-            ServerLevel level = level(server, spec);
-            if (level == null) return;
-            double r2 = radius * radius;
-            for (ServerPlayer p : level.players()) {
-                if (p.distanceToSqr(spec.pos()) <= r2) {
-                    Feedback.chat(p, Lang.fmt("msg.say", "name", spec.name(), "text", text));
-                }
+    public static int say(MinecraftServer server, UUID npcId, String text, double radius) {
+        Optional<NpcSpec> spec = NpcStore.get(server).get(npcId);
+        if (spec.isEmpty()) return 0;
+        ServerLevel level = level(server, spec.get());
+        if (level == null) return 0;
+        double r2 = radius * radius;
+        int heard = 0;
+        for (ServerPlayer p : level.players()) {
+            if (p.distanceToSqr(spec.get().pos()) <= r2) {
+                Feedback.chat(p, Lang.fmt("msg.say", "name", spec.get().name(), "text", text));
+                heard++;
             }
-        });
+        }
+        return heard;
     }
 
     public static void lookAt(MinecraftServer server, UUID npcId, Vec3 target) {

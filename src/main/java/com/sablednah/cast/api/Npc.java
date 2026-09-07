@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.sablednah.cast.core.NpcKind;
 
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Entity;
@@ -24,5 +23,9 @@ public record Npc(UUID id, NpcKind kind, String name, Identifier dimension, Vec3
 
     public boolean isHuman() {
         return kind == NpcKind.HUMAN;
+    }
+
+    public boolean isMob() {
+        return kind == NpcKind.MOB;
     }
 }

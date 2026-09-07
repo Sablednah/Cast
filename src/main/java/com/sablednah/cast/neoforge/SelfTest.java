@@ -137,6 +137,7 @@ public final class SelfTest {
             check("rebody fires NpcRemovedEvent(REBODY)", removedEvents[0] >= 1);
             Cast.drive(server, human, here.add(0, 0, 3), 45F, 0F);
             check("drive moves the spec", Cast.byId(server, human).map(n -> n.pos().z > here.z + 2).orElse(false));
+            check("say with nobody near returns 0", Cast.say(server, human, "hello?", 8.0) == 0);
             check("rename lands", Cast.byId(server, human).map(n -> n.name().equals("Renamed")).orElse(false));
             viewer.discard();
         } finally {

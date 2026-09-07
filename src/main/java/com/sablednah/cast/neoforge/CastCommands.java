@@ -12,7 +12,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.sablednah.cast.api.Cast;
 import com.sablednah.cast.api.Npc;
-import com.sablednah.cast.core.NpcKind;
+import com.sablednah.cast.api.NpcKind;
 import com.sablednah.cast.npc.Brains;
 import com.sablednah.cast.npc.Npcs;
 

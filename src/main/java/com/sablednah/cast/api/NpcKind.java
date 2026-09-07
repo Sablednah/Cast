@@ -1,4 +1,4 @@
-package com.sablednah.cast.core;
+package com.sablednah.cast.api;
 
 import java.util.Locale;
 
