@@ -4,7 +4,8 @@
   "package": "com.sablednah.cast.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "ServerGamePacketListenerImplMixin"
+    "ServerGamePacketListenerImplMixin",
+    "InteractPacketAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

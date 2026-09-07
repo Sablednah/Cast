@@ -89,6 +89,14 @@ mixin/   ServerGamePacketListenerImplMixin, InteractPacketAccessor
 
 ## Known traps
 
+- **Every mixin, accessors included, must be LISTED in `cast.mixins.json`.**
+  An accessor that merely sits in the package throws
+  `IllegalClassLoadError` the first time anything references it -- for
+  `InteractPacketAccessor` that was the first interact packet of any kind,
+  i.e. Sable hitting a zombie, and it crashed the client's server. The
+  self-test now casts a real packet to the accessor so an unlisted one fails
+  at boot, not in play.
+
 - `net.minecraft.util.Util`, not `net.minecraft.Util`, on 1.21.11.
 - The decompiled 1.21.11 sources are the July `decompile_b70d…` jar in
   `~/.gradle/caches/neoformruntime`; the two August jars are 26.1 and 26.2.
