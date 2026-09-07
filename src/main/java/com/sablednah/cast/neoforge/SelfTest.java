@@ -160,10 +160,13 @@ public final class SelfTest {
             });
             Cast.rename(server, human, "Renamed");
             check("rebody fires NpcRemovedEvent(REBODY)", removedEvents[0] >= 1);
+            Cast.setAnchored(server, human, false);
+            Cast.rename(server, human, "Renamed Again");
+            check("a rebuilt body starts anchored", Npcs.isAnchored(human));
             Cast.drive(server, human, here.add(0, 0, 3), 45F, 0F);
             check("drive moves the spec", Cast.byId(server, human).map(n -> n.pos().z > here.z + 2).orElse(false));
             check("say with nobody near returns 0", Cast.say(server, human, "hello?", 8.0) == 0);
-            check("rename lands", Cast.byId(server, human).map(n -> n.name().equals("Renamed")).orElse(false));
+            check("rename lands", Cast.byId(server, human).map(n -> n.name().equals("Renamed Again")).orElse(false));
             viewer.discard();
         } finally {
             check("remove is idempotent (first)", Cast.remove(server, human));

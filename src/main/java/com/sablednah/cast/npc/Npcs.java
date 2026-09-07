@@ -144,6 +144,7 @@ public final class Npcs {
                     Phantoms.hideFromAll(level, human);
                     HUMANS.remove(spec.id());
                     Proxies.remove(spec.id());
+                    UNANCHORED.remove(spec.id());
                     NeoForge.EVENT_BUS.post(new NpcRemovedEvent(spec.id(), NpcRemovedEvent.Reason.UNLOAD));
                 }
                 return;
@@ -200,6 +201,9 @@ public final class Npcs {
         NpcStore.get(server).get(npcId).ifPresent(spec -> {
             ServerLevel level = level(server, spec);
             HumanNpc human = HUMANS.remove(npcId);
+            // A new body under the same npcId starts anchored, whatever the old one was doing:
+            // a suspended anchor must never outlive the body it was suspended for.
+            UNANCHORED.remove(npcId);
             if (human != null && level != null) {
                 Phantoms.hideFromAll(level, human);
                 NeoForge.EVENT_BUS.post(new NpcRemovedEvent(npcId, NpcRemovedEvent.Reason.REBODY));
