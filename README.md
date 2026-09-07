@@ -16,8 +16,10 @@ Depends on nothing. [Chronicler](https://github.com/Sablednah/Chronicler)
 uses it for quest givers; [LegendQuest StoryTeller](https://github.com/Sablednah/LegendQuest-StoryTeller)
 uses it for its cast. Server-side only; vanilla clients see everything.
 
-**Status: 0.1.0 (unreleased).** Built 2026-09-07, self-tested headless, not
-yet play-tested.
+**Status: 0.1.0 (unreleased).** Built 2026-09-07 and play-tested the same
+day: a human with a real skin renders on a vanilla-protocol client and turns
+to follow you; villager and cow bodies stand and look. StoryTeller possesses
+both kinds.
 
 ## Commands (`cast.admin` or op level 2)
 
