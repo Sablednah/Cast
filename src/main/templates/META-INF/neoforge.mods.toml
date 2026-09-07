@@ -1,0 +1,36 @@
+# Cast — neoforge.mods.toml (values are expanded from gradle.properties at build time).
+# EDIT THIS TEMPLATE, never the generated copy under build/.
+modLoader="javafml"
+loaderVersion="${loader_version_range}"
+license="${mod_license}"
+issueTrackerURL="https://github.com/Sablednah/Cast/issues"
+
+[[mods]]
+modId="${mod_id}"
+version="${mod_version}"
+displayName="${mod_name}"
+authors="${mod_authors}"
+description='''
+${mod_description}
+'''
+displayURL="https://sablecraft.co.uk/cast/"
+
+# Exactly one mixin, and it is the human NPC's right-click: a phantom player
+# has no server entity, so vanilla's interact handler would drop the packet on
+# the floor. See CLAUDE.md before adding a second.
+[[mixins]]
+config="cast.mixins.json"
+
+[[dependencies.${mod_id}]]
+    modId="neoforge"
+    type="required"
+    versionRange="${neo_version_range}"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.${mod_id}]]
+    modId="minecraft"
+    type="required"
+    versionRange="${minecraft_version_range}"
+    ordering="NONE"
+    side="BOTH"

@@ -1,0 +1,7 @@
+{
+  "cast.configuration.npcs": "NPCs",
+  "cast.configuration.viewRange": "NPC View Range (blocks)",
+  "cast.configuration.lookRange": "NPC Look-At Range (blocks)",
+  "cast.configuration.skins": "Skins",
+  "cast.configuration.fetchSkins": "Fetch Skins From Mojang"
+}
