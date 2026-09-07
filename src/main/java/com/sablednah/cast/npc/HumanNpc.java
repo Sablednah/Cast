@@ -2,8 +2,11 @@ package com.sablednah.cast.npc;
 
 import java.util.UUID;
 
+import com.google.common.collect.ImmutableMultimap;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
+import com.mojang.authlib.properties.PropertyMap;
+import com.sablednah.cast.CastMod;
 import com.sablednah.cast.core.NpcSpec;
 import com.sablednah.cast.core.NpcStore;
 
@@ -32,9 +35,21 @@ public final class HumanNpc extends FakePlayer {
     public static HumanNpc create(ServerLevel level, NpcSpec spec, NpcStore store) {
         // A v3 UUID from the npcId: stable, and it cannot collide with a real account.
         UUID profileId = UUID.nameUUIDFromBytes(("cast:" + spec.id()).getBytes(java.nio.charset.StandardCharsets.UTF_8));
-        GameProfile profile = new GameProfile(profileId, spec.profileName());
-        spec.skin().flatMap(store::skin).ifPresent(skin ->
-                profile.properties().put("textures", new Property("textures", skin.value(), skin.signature())));
+        // authlib 9's GameProfile is immutable -- properties() cannot be put to (that was a
+        // tick-loop crash in play), so the skin goes in through the constructor.
+        GameProfile profile;
+        var skin = spec.skin().flatMap(store::skin);
+        if (skin.isPresent()) {
+            try {
+                profile = new GameProfile(profileId, spec.profileName(), new PropertyMap(ImmutableMultimap.of(
+                        "textures", new Property("textures", skin.get().value(), skin.get().signature()))));
+            } catch (RuntimeException e) {
+                CastMod.LOGGER.warn("Cast: could not apply cached skin to NPC {} -- default skin ({})", spec.id(), e.toString());
+                profile = new GameProfile(profileId, spec.profileName());
+            }
+        } else {
+            profile = new GameProfile(profileId, spec.profileName());
+        }
         HumanNpc npc = new HumanNpc(level, profile, spec.id());
         npc.snapTo(spec.pos().x, spec.pos().y, spec.pos().z, spec.yaw(), spec.pitch());
         npc.setYHeadRot(spec.yaw());

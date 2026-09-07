@@ -80,14 +80,26 @@ public final class Npcs {
             if (level != null) body(level, s).ifPresent(Entity::discard);
             MOBS.remove(npcId);
         });
+        BROKEN.remove(npcId);
         if (had) NeoForge.EVENT_BUS.post(new NpcRemovedEvent(npcId, NpcRemovedEvent.Reason.REMOVED));
         return had;
     }
 
     // --- the tick ---
 
+    private static final Set<UUID> BROKEN = new HashSet<>();
+
+    /** One bad NPC must never take the server tick with it: log once, skip it, keep going. */
     public static void tick(MinecraftServer server) {
-        for (NpcSpec spec : List.copyOf(NpcStore.get(server).all())) tickOne(server, spec);
+        for (NpcSpec spec : List.copyOf(NpcStore.get(server).all())) {
+            try {
+                tickOne(server, spec);
+            } catch (RuntimeException e) {
+                if (BROKEN.add(spec.id())) {
+                    CastMod.LOGGER.error("Cast: NPC {} ({}) threw and is skipped until restart or removal -- /cast remove it", spec.id(), spec.name(), e);
+                }
+            }
+        }
     }
 
     private static void tickOne(MinecraftServer server, NpcSpec spec) {

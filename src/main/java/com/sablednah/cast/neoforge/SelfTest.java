@@ -83,6 +83,11 @@ public final class SelfTest {
             check("human handle: entity is a phantom player, not in a level's entity list",
                     h.flatMap(Npc::entity).map(e -> e instanceof HumanNpc && level.getEntity(e.getUUID()) == null).orElse(false));
             check("human profile name trimmed to 16", h.flatMap(Npc::entity).map(e -> ((HumanNpc) e).getGameProfile().name().length() <= 16).orElse(false));
+            // A cached skin must reach the profile through the constructor (properties() is immutable).
+            store.putSkin("selftestskin", new NpcStore.Skin(UUID.randomUUID(), "dGVzdA==", "c2ln", 0L));
+            Npcs.setSkin(server, human, Optional.of("selftestskin"));
+            check("cached skin lands on the phantom profile", Cast.byId(server, human).flatMap(Npc::entity)
+                    .map(e -> ((HumanNpc) e).getGameProfile().properties().containsKey("textures")).orElse(false));
             check("human is not listed", h.flatMap(Npc::entity).map(e -> !((HumanNpc) e).allowsListing()).orElse(false));
 
             Optional<Npc> v = Cast.byId(server, villager);
