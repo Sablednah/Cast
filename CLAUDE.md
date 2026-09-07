@@ -87,6 +87,28 @@ neoforge/ CastEvents, CastCommands, CastPermissions, Lang, Feedback, SelfTest
 mixin/   ServerGamePacketListenerImplMixin, InteractPacketAccessor
 ```
 
+## Versions
+
+Branch per Minecraft version: `main` = 1.21.11 (Java 21), `mc26.2` = 26.2 on
+NeoForge 26.2.0.72 (Java 25, `/home/sable/.gradle/jdks/eclipse_adoptium-25-amd64-linux.2`).
+Docs live on `main` only; features are cherry-picked forward. Each branch
+differs in `gradle.properties` (four lines), `build.gradle` (plugin 2.0.144,
+toolchain 25, `gameDirectory = run-mc26.2` so a 1.21.11 world is never
+upgraded in place), `cast.mixins.json` (`JAVA_25`) and the 26.2 drift:
+
+- `ServerboundInteractPacket` is a record carrying hand **and** location; the
+  attack is its own `ServerboundAttackPacket`. No accessor mixin on 26.2.
+- `SavedDataType` takes an `Identifier` (`cast:npcs`), and the file moves to a
+  namespaced folder. No shipped world has crossed lines yet.
+- `sendSystemMessage(text, overlay)` for `displayClientMessage`; `EntityTypes.*`
+  for `EntityType.*`; `entityTags()` for `getTags()`; `ChatFormatting` is a bare
+  enum, so `Feedback` owns the five formatting codes.
+- A 26.2 dev server with no player loads **no spawn chunks**; the self-test
+  forces a 3x3 around the spawn chunk and keeps every actor inside the middle one.
+
+Both jars sit in `build/libs` side by side (`cast-<ver>+mc<mc>.jar`); Chronicler
+picks by the `+mc` suffix. `mc26.1` not created yet.
+
 ## Known traps
 
 - **Every mixin, accessors included, must be LISTED in `cast.mixins.json`.**
