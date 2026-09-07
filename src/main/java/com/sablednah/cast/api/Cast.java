@@ -124,6 +124,15 @@ public final class Cast {
         Npcs.drive(server, npcId, pos, yaw, pitch);
     }
 
+    /**
+     * A body is put back on its spot once a second, so a shove does not herd it
+     * away. Suspend that while you walk an NPC somewhere on purpose (a
+     * possession); re-anchoring makes wherever it stands now its spot.
+     */
+    public static void setAnchored(MinecraftServer server, UUID npcId, boolean anchored) {
+        Npcs.setAnchored(server, npcId, anchored);
+    }
+
     public static void rename(MinecraftServer server, UUID npcId, String name) {
         Npcs.rename(server, npcId, name);
     }

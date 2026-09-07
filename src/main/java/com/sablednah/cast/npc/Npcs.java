@@ -77,10 +77,12 @@ public final class Npcs {
             ServerLevel level = level(server, s);
             HumanNpc human = HUMANS.remove(npcId);
             if (human != null && level != null) Phantoms.hideFromAll(level, human);
+            Proxies.remove(npcId);
             if (level != null) body(level, s).ifPresent(Entity::discard);
             MOBS.remove(npcId);
         });
         BROKEN.remove(npcId);
+        UNANCHORED.remove(npcId);
         if (had) NeoForge.EVENT_BUS.post(new NpcRemovedEvent(npcId, NpcRemovedEvent.Reason.REMOVED));
         return had;
     }
@@ -88,6 +90,35 @@ public final class Npcs {
     // --- the tick ---
 
     private static final Set<UUID> BROKEN = new HashSet<>();
+    /** NPCs whose anchor is suspended -- a possessor is walking them somewhere. */
+    private static final Set<UUID> UNANCHORED = new HashSet<>();
+
+    /**
+     * Anchoring: a body is put back on its spot once a second, so a shove
+     * does not herd it away. A possessor moves an NPC on purpose, so
+     * possession suspends the anchor; re-anchoring makes wherever the body
+     * stands now its new spot.
+     */
+    public static void setAnchored(MinecraftServer server, UUID npcId, boolean anchored) {
+        if (!anchored) {
+            UNANCHORED.add(npcId);
+            return;
+        }
+        UNANCHORED.remove(npcId);
+        NpcStore store = NpcStore.get(server);
+        store.get(npcId).ifPresent(spec -> {
+            ServerLevel level = level(server, spec);
+            if (level == null) return;
+            Entity body = spec.kind() == NpcKind.HUMAN ? HUMANS.get(npcId) : body(level, spec).orElse(null);
+            if (body != null) {
+                store.put(spec.withPose(level.dimension().identifier(), body.position(), body.getYRot(), body.getXRot()));
+            }
+        });
+    }
+
+    public static boolean isAnchored(UUID npcId) {
+        return !UNANCHORED.contains(npcId);
+    }
 
     /** One bad NPC must never take the server tick with it: log once, skip it, keep going. */
     public static void tick(MinecraftServer server) {
@@ -112,6 +143,7 @@ public final class Npcs {
                 if (human != null) {
                     Phantoms.hideFromAll(level, human);
                     HUMANS.remove(spec.id());
+                    Proxies.remove(spec.id());
                     NeoForge.EVENT_BUS.post(new NpcRemovedEvent(spec.id(), NpcRemovedEvent.Reason.UNLOAD));
                 }
                 return;
@@ -120,13 +152,14 @@ public final class Npcs {
                 human = HumanNpc.create(level, spec, NpcStore.get(server));
                 HUMANS.put(spec.id(), human);
             }
+            Proxies.ensure(level, human, spec);
             if (spec.lookAtPlayers()) look(level, human, spec);
             Phantoms.update(level, human, spec);
         } else {
             if (!loaded) return;
             Optional<Mob> body = body(level, spec);
             if (body.isPresent()) {
-                Bodies.maintain(body.get());
+                Bodies.maintain(body.get(), spec, isAnchored(spec.id()));
                 return;
             }
             Bodies.spawn(level, spec).ifPresent(mob -> {
@@ -191,6 +224,7 @@ public final class Npcs {
 
     public static Optional<UUID> npcIdOf(Entity entity) {
         if (entity instanceof HumanNpc h) return Optional.of(h.npcId);
+        // A proxy stands in for its phantom: same id, same roles. Never a body of its own.
         if (entity == null) return Optional.empty();
         return entity.getPersistentData().getString(Cast.MARKER).flatMap(s -> {
             try { return Optional.of(UUID.fromString(s)); } catch (IllegalArgumentException e) { return Optional.empty(); }
@@ -399,6 +433,8 @@ public final class Npcs {
         }
         HUMANS.clear();
         MOBS.clear();
+        UNANCHORED.clear();
+        Proxies.clear();
         Phantoms.clear();
         ROLES_OFF.clear();
     }

@@ -72,6 +72,13 @@ public final class CastEvents {
         });
     }
 
+    /** A proxy armor stand from before a restart has no phantom behind it: discard on sight. */
+    @SubscribeEvent
+    static void onJoin(net.neoforged.neoforge.event.entity.EntityJoinLevelEvent event) {
+        if (event.getLevel().isClientSide()) return;
+        if (com.sablednah.cast.npc.Proxies.isOrphan(event.getEntity())) event.getEntity().discard();
+    }
+
     @SubscribeEvent
     static void onDamage(LivingIncomingDamageEvent event) {
         if (Npcs.npcIdOf(event.getEntity()).isPresent()) event.setCanceled(true);

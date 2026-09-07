@@ -88,6 +88,12 @@ public final class SelfTest {
             Npcs.setSkin(server, human, Optional.of("selftestskin"));
             check("cached skin lands on the phantom profile", Cast.byId(server, human).flatMap(Npc::entity)
                     .map(e -> ((HumanNpc) e).getGameProfile().properties().containsKey("textures")).orElse(false));
+            var proxy = com.sablednah.cast.npc.Proxies.of(human);
+            var proxyEntity = proxy.orElse(null);
+            Npcs.tick(server);
+            check("a second tick does not make a second proxy", proxyEntity != null && com.sablednah.cast.npc.Proxies.of(human).orElse(null) == proxyEntity);
+            check("phantom has a solid proxy standing in its space", proxy
+                    .map(p -> p.distanceToSqr(here) < 0.01 && p.isInvisible() && p.isInvulnerable()).orElse(false));
             check("human is not listed", h.flatMap(Npc::entity).map(e -> !((HumanNpc) e).allowsListing()).orElse(false));
 
             Optional<Npc> v = Cast.byId(server, villager);
@@ -97,6 +103,20 @@ public final class SelfTest {
             check("villager is invulnerable", v.flatMap(Npc::entity).map(e -> e.isInvulnerable()).orElse(false));
             Optional<Npc> z = Cast.byId(server, zombie);
             check("zombie body exists and is ours", z.flatMap(Npc::entity).map(Cast::isNpc).orElse(false));
+            // Anchoring: a shoved body goes home; a possessed one is left where its wearer walks it.
+            Mob zb = (Mob) z.flatMap(Npc::entity).orElseThrow();
+            Vec3 home = zb.position();
+            zb.snapTo(home.x + 3, home.y, home.z, 0F, 0F);
+            Npcs.tick(server);
+            check("anchored body snaps home after a shove", zb.distanceToSqr(home) < 0.01);
+            Cast.setAnchored(server, zombie, false);
+            zb.snapTo(home.x + 3, home.y, home.z, 0F, 0F);
+            Npcs.tick(server);
+            check("unanchored body stays where it was walked", zb.distanceToSqr(home) > 8.0);
+            Cast.setAnchored(server, zombie, true);
+            Npcs.tick(server);
+            check("re-anchoring adopts the new spot", zb.distanceToSqr(home) > 8.0
+                    && Cast.byId(server, zombie).map(n -> n.pos().distanceToSqr(zb.position()) < 0.01).orElse(false));
             check("zombie has only our goals", z.flatMap(Npc::entity).map(e -> ((Mob) e).goalSelector.getAvailableGoals().size() == 2).orElse(false));
 
             // --- packets to a viewer: must not throw ---
@@ -151,6 +171,8 @@ public final class SelfTest {
             Cast.remove(server, villager);
             Cast.remove(server, zombie);
             check("store back to where it was", store.size() == before);
+            Npcs.tick(server);
+            check("proxy gone with its phantom", com.sablednah.cast.npc.Proxies.of(human).isEmpty());
             level.setChunkForced(((int) here.x) >> 4, ((int) here.z) >> 4, false);
         }
 

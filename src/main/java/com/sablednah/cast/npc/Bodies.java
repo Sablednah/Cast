@@ -56,6 +56,8 @@ public final class Bodies {
         mob.setPersistenceRequired();
         mob.setInvulnerable(true);
         mob.setNoAi(false);
+        var kb = mob.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.KNOCKBACK_RESISTANCE);
+        if (kb != null) kb.setBaseValue(1.0D);
         // Ours from here: clear whatever the body was born with, then the idle set.
         mob.goalSelector.removeAllGoals(g -> true);
         mob.targetSelector.removeAllGoals(g -> true);
@@ -66,10 +68,19 @@ public final class Bodies {
         Brains.neutralise(mob);
     }
 
-    /** The cheap per-second re-assert: a brain regrows behaviours on refresh, a command can heal. */
-    public static void maintain(Mob mob) {
+    /**
+     * The cheap per-second re-assert: a brain regrows behaviours on refresh, a
+     * command can heal, and a zombie can shove. A body that has drifted more
+     * than a block from its spot is put back -- it keeps its physical presence
+     * (players bump into it) without being herded around the map.
+     */
+    public static void maintain(Mob mob, NpcSpec spec, boolean anchored) {
         Brains.neutralise(mob);
         if (!mob.isInvulnerable()) mob.setInvulnerable(true);
+        if (anchored && mob.distanceToSqr(spec.pos()) > 1.0D) {
+            mob.snapTo(spec.pos().x, spec.pos().y, spec.pos().z, mob.getYRot(), mob.getXRot());
+            mob.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
+        }
     }
 
     private Bodies() {}
