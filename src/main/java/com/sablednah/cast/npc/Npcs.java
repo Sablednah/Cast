@@ -412,6 +412,21 @@ public final class Npcs {
         return false;
     }
 
+    /** A marked body joined a level: rebuild its goals from the spec, because vanilla just rebuilt its own. */
+    public static void reown(ServerLevel level, Mob mob) {
+        Optional<UUID> id = npcIdOf(mob);
+        if (id.isEmpty()) return;
+        Optional<NpcSpec> spec = NpcStore.get(level.getServer()).get(id.get());
+        if (spec.isEmpty()) {
+            // A body whose NPC was removed while its chunk was unloaded: nothing owns it now.
+            CastMod.LOGGER.info("Cast: body {} of a removed NPC {} discarded on load", mob.getUUID(), id.get());
+            mob.discard();
+            return;
+        }
+        Bodies.configure(mob, spec.get());
+        MOBS.put(id.get(), mob);
+    }
+
     // --- lifecycle from events ---
 
     public static void onBodyGone(Entity entity, NpcRemovedEvent.Reason reason) {

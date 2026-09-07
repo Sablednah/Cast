@@ -118,6 +118,11 @@ public final class SelfTest {
             check("re-anchoring adopts the new spot", zb.distanceToSqr(home) > 8.0
                     && Cast.byId(server, zombie).map(n -> n.pos().distanceToSqr(zb.position()) < 0.01).orElse(false));
             check("zombie has only our goals", z.flatMap(Npc::entity).map(e -> ((Mob) e).goalSelector.getAvailableGoals().size() == 2).orElse(false));
+            // A reload gives a body its vanilla goals back; reown must take them away again.
+            Mob reloaded = (Mob) z.flatMap(Npc::entity).orElseThrow();
+            reloaded.goalSelector.addGoal(5, new net.minecraft.world.entity.ai.goal.FloatGoal(reloaded)); // a vanilla goal, as a reload would give it
+            Npcs.reown(level, reloaded);
+            check("reown strips a rebuilt body back to our goals", reloaded.goalSelector.getAvailableGoals().size() == 2);
 
             // --- packets to a viewer: must not throw ---
             FakePlayer viewer = new FakePlayer(level, new GameProfile(UUID.nameUUIDFromBytes("cast:viewer".getBytes()), "CastViewer"));

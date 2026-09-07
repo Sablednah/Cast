@@ -72,11 +72,22 @@ public final class CastEvents {
         });
     }
 
-    /** A proxy armor stand from before a restart has no phantom behind it: discard on sight. */
+    /**
+     * Two things on join. A proxy armor stand from before a restart has no
+     * phantom behind it: discarded on sight. A mob BODY coming back from a
+     * restart or a chunk reload has its vanilla goals again -- goals are never
+     * saved with an entity, they are rebuilt at construction -- so it is made
+     * ours again before it takes a step. Without this a cow NPC wanders and is
+     * dragged back every second, which is exactly what Sable saw.
+     */
     @SubscribeEvent
     static void onJoin(net.neoforged.neoforge.event.entity.EntityJoinLevelEvent event) {
         if (event.getLevel().isClientSide()) return;
-        if (com.sablednah.cast.npc.Proxies.isOrphan(event.getEntity())) event.getEntity().discard();
+        Entity e = event.getEntity();
+        if (com.sablednah.cast.npc.Proxies.isOrphan(e)) { e.discard(); return; }
+        if (e instanceof net.minecraft.world.entity.Mob mob && e.level() instanceof net.minecraft.server.level.ServerLevel level) {
+            Npcs.reown(level, mob);
+        }
     }
 
     @SubscribeEvent
