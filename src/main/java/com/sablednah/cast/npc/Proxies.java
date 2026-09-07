@@ -10,7 +10,7 @@ import com.sablednah.cast.core.NpcSpec;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.decoration.ArmorStand;
 
 /**
@@ -41,7 +41,7 @@ public final class Proxies {
             }
             return;
         }
-        Entity created = EntityType.ARMOR_STAND.create(level, EntitySpawnReason.COMMAND);
+        Entity created = EntityTypes.ARMOR_STAND.create(level, EntitySpawnReason.COMMAND);
         if (!(created instanceof ArmorStand stand)) {
             com.sablednah.cast.CastMod.LOGGER.warn("Cast: could not create a proxy for NPC {} (got {})", npc.npcId, created);
             return;
@@ -69,7 +69,7 @@ public final class Proxies {
 
     /** A proxy with no live phantom behind it: a leftover from a restart. */
     public static boolean isOrphan(Entity entity) {
-        if (!(entity instanceof ArmorStand) || !entity.getTags().contains(TAG)) return false;
+        if (!(entity instanceof ArmorStand) || !entity.entityTags().contains(TAG)) return false;
         return !PROXIES.containsValue(entity);
     }
 
@@ -79,7 +79,7 @@ public final class Proxies {
     }
 
     public static boolean isProxy(Entity entity) {
-        return entity instanceof ArmorStand && entity.getTags().contains(TAG);
+        return entity instanceof ArmorStand && entity.entityTags().contains(TAG);
     }
 
     public static void clear() {

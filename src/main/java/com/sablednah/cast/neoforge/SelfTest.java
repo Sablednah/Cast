@@ -69,8 +69,14 @@ public final class SelfTest {
         }
 
         // --- the store and both bodies, through the API ---
-        Vec3 here = Vec3.atBottomCenterOf(level.getRespawnData().globalPos().pos());
-        level.setChunkForced(((int) here.x) >> 4, ((int) here.z) >> 4, true);
+        // The middle of the spawn chunk, so every actor placed within a few blocks shares one chunk:
+        // on 26.2 a dev server with no player has no spawn chunks loaded, and a body two blocks
+        // over a chunk edge is unloaded, silently never spawns, and the first orElseThrow on it
+        // takes the server down. Force the neighbours too, for the walk-away checks.
+        var spawnPos = level.getRespawnData().globalPos().pos();
+        Vec3 here = new Vec3(((spawnPos.getX() >> 4) << 4) + 8.5, spawnPos.getY(), ((spawnPos.getZ() >> 4) << 4) + 8.5);
+        int cx = ((int) Math.floor(here.x)) >> 4, cz = ((int) Math.floor(here.z)) >> 4;
+        for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) level.setChunkForced(cx + dx, cz + dz, true);
         NpcStore store = NpcStore.get(server);
         int before = store.size();
         UUID human = Cast.spawnHuman(level, here, 0F, "Dr Okafor of the Long Name", Optional.empty(), List.of(Identifier.parse("cast:selftest")));
@@ -104,7 +110,11 @@ public final class SelfTest {
             Optional<Npc> z = Cast.byId(server, zombie);
             check("zombie body exists and is ours", z.flatMap(Npc::entity).map(Cast::isNpc).orElse(false));
             // Anchoring: a shoved body goes home; a possessed one is left where its wearer walks it.
-            Mob zb = (Mob) z.flatMap(Npc::entity).orElseThrow();
+            Mob zb = (Mob) z.flatMap(Npc::entity).orElse(null);
+            if (zb == null) {
+                check("anchored body snaps home after a shove (no zombie body to test)", false);
+                check("unanchored body stays where it was walked (no zombie body to test)", false);
+            } else {
             Vec3 home = zb.position();
             zb.snapTo(home.x + 3, home.y, home.z, 0F, 0F);
             Npcs.tick(server);
@@ -119,13 +129,14 @@ public final class SelfTest {
                     && Cast.byId(server, zombie).map(n -> n.pos().distanceToSqr(zb.position()) < 0.01).orElse(false));
             check("zombie has only our goals", z.flatMap(Npc::entity).map(e -> ((Mob) e).goalSelector.getAvailableGoals().size() == 2).orElse(false));
             // A reload gives a body its vanilla goals back; reown must take them away again.
-            Mob reloaded = (Mob) z.flatMap(Npc::entity).orElseThrow();
+            Mob reloaded = zb;
             reloaded.goalSelector.addGoal(5, new net.minecraft.world.entity.ai.goal.FloatGoal(reloaded)); // a vanilla goal, as a reload would give it
             Npcs.reown(level, reloaded);
             check("reown strips a rebuilt body back to our goals", reloaded.goalSelector.getAvailableGoals().size() == 2);
             Cast.setAnchored(server, zombie, false);
             Npcs.reown(level, reloaded);
             check("reown re-anchors a body whose mover is gone", Npcs.isAnchored(zombie));
+            }
 
             // --- packets to a viewer: must not throw ---
             FakePlayer viewer = new FakePlayer(level, new GameProfile(UUID.nameUUIDFromBytes("cast:viewer".getBytes()), "CastViewer"));
@@ -184,19 +195,20 @@ public final class SelfTest {
             check("store back to where it was", store.size() == before);
             Npcs.tick(server);
             check("proxy gone with its phantom", com.sablednah.cast.npc.Proxies.of(human).isEmpty());
-            level.setChunkForced(((int) here.x) >> 4, ((int) here.z) >> 4, false);
+            for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) level.setChunkForced(cx + dx, cz + dz, false);
         }
 
-        // The accessor mixin must be LISTED in cast.mixins.json, not just present in the package: an
-        // unlisted accessor throws IllegalClassLoadError on the first interact packet of any kind --
-        // which is every hit on every mob. Found by Sable hitting a zombie. Exercise it here.
+        // 26.2: the interact packet is a record, so no accessor mixin is needed; the 1.21.11 line
+        // paid for an unlisted one with a crash on every hit. Build one the way the client does and
+        // read it back, so a future shape change is caught here rather than by a player.
         try {
             var probe = new FakePlayer(level, new GameProfile(UUID.nameUUIDFromBytes("cast:probe".getBytes()), "CastProbe"));
-            var packet = net.minecraft.network.protocol.game.ServerboundInteractPacket.createAttackPacket(probe, false);
-            check("interact accessor mixin is applied", ((com.sablednah.cast.mixin.InteractPacketAccessor) packet).cast$entityId() == probe.getId());
+            var packet = new net.minecraft.network.protocol.game.ServerboundInteractPacket(probe.getId(),
+                    net.minecraft.world.InteractionHand.MAIN_HAND, net.minecraft.world.phys.Vec3.ZERO, false);
+            check("interact packet carries the entity id", packet.entityId() == probe.getId());
             probe.discard();
         } catch (Throwable t) {
-            check("interact accessor mixin is applied (" + t + ")", false);
+            check("interact packet carries the entity id (" + t + ")", false);
         }
 
         check("lang catalogue", Lang.catalogueSize() > 15 && !Feedback.colored("&6x").getString().contains("§"));

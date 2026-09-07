@@ -23,7 +23,7 @@ import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -79,7 +79,7 @@ public final class Phantoms {
                 ClientboundPlayerInfoUpdatePacket.Action.UPDATE_LATENCY), List.of(npc)));
         send(viewer, new ClientboundAddEntityPacket(npc.getId(), npc.getUUID(),
                 npc.getX(), npc.getY(), npc.getZ(), npc.getXRot(), npc.getYRot(),
-                EntityType.PLAYER, 0, Vec3.ZERO, npc.getYHeadRot()));
+                EntityTypes.PLAYER, 0, Vec3.ZERO, npc.getYHeadRot()));
         List<SynchedEntityData.DataValue<?>> values = npc.getEntityData().getNonDefaultValues();
         if (values != null && !values.isEmpty()) {
             send(viewer, new ClientboundSetEntityDataPacket(npc.getId(), values));
