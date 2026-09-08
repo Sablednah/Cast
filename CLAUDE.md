@@ -89,8 +89,11 @@ mixin/   ServerGamePacketListenerImplMixin, InteractPacketAccessor
 
 ## Versions
 
-Branch per Minecraft version: `main` = 1.21.11 (Java 21), `mc26.2` = 26.2 on
-NeoForge 26.2.0.72 (Java 25, `/home/sable/.gradle/jdks/eclipse_adoptium-25-amd64-linux.2`).
+Branch per Minecraft version: `main` = 1.21.11 (Java 21), `mc26.1` = 26.1.2 on
+NeoForge 26.1.2.95 and `mc26.2` = 26.2 on NeoForge 26.2.0.72 (both Java 25,
+`/home/sable/.gradle/jdks/eclipse_adoptium-25-amd64-linux.2`). 26.1 carries the
+same drift as 26.2 below EXCEPT the entity-type constants and `ChatFormatting`,
+which it still has; its run dir is `run-mc26.1.2`.
 Docs live on `main` only; features are cherry-picked forward. Each branch
 differs in `gradle.properties` (four lines), `build.gradle` (plugin 2.0.144,
 toolchain 25, `gameDirectory = run-mc26.2` so a 1.21.11 world is never
@@ -107,7 +110,7 @@ upgraded in place), `cast.mixins.json` (`JAVA_25`) and the 26.2 drift:
   forces a 3x3 around the spawn chunk and keeps every actor inside the middle one.
 
 Both jars sit in `build/libs` side by side (`cast-<ver>+mc<mc>.jar`); Chronicler
-picks by the `+mc` suffix. `mc26.1` not created yet.
+picks by the `+mc` suffix.
 
 ## Known traps
 
