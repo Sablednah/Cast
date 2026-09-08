@@ -186,6 +186,15 @@ public final class SelfTest {
             check("drive moves the spec", Cast.byId(server, human).map(n -> n.pos().z > here.z + 2).orElse(false));
             check("say with nobody near returns 0", Cast.say(server, human, "hello?", 8.0) == 0);
             check("rename lands", Cast.byId(server, human).map(n -> n.name().equals("Renamed Again")).orElse(false));
+            // Dressing: a /give string in a slot, on a phantom and on a body; a bad slot or item is refused.
+            check("equip: a potion in the phantom's hand", Cast.equip(server, human, "mainhand", "minecraft:potion[potion_contents={potion:'minecraft:healing'}]")
+                    && Cast.byId(server, human).flatMap(Npc::entity).map(e -> ((net.minecraft.world.entity.LivingEntity) e).getMainHandItem().is(net.minecraft.world.item.Items.POTION)).orElse(false)); // fresh handle: rename rebodied the phantom
+            check("equip: a helmet on the villager", Cast.equip(server, villager, "head", "minecraft:iron_helmet")
+                    && Cast.byId(server, villager).flatMap(Npc::entity).map(e -> ((net.minecraft.world.entity.LivingEntity) e).getItemBySlot(net.minecraft.world.entity.EquipmentSlot.HEAD).is(net.minecraft.world.item.Items.IRON_HELMET)).orElse(false));
+            check("equip: remembered in the store", Cast.equipment(server, human).getOrDefault("mainhand", "").startsWith("minecraft:potion"));
+            check("equip: a wrong slot is refused", !Cast.equip(server, human, "hat", "minecraft:iron_helmet"));
+            check("equip: a wrong item is refused", !Cast.equip(server, human, "offhand", "minecraft:no_such_thing"));
+            check("equip: blank clears", Cast.equip(server, human, "mainhand", "") && Cast.byId(server, human).flatMap(Npc::entity).map(e -> ((net.minecraft.world.entity.LivingEntity) e).getMainHandItem().isEmpty()).orElse(false));
             viewer.discard();
         } finally {
             check("remove is idempotent (first)", Cast.remove(server, human));

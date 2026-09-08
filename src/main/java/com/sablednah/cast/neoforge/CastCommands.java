@@ -57,6 +57,11 @@ public final class CastCommands {
                 .then(Commands.literal("look").then(Commands.argument("on", BoolArgumentType.bool()).executes(CastCommands::look)))
                 .then(Commands.literal("here").executes(CastCommands::here))
                 .then(Commands.literal("say").then(Commands.argument("text", StringArgumentType.greedyString()).executes(CastCommands::say)))
+                .then(Commands.literal("equip")
+                        .then(Commands.argument("slot", StringArgumentType.word())
+                                .suggests((c, b) -> net.minecraft.commands.SharedSuggestionProvider.suggest(List.of("mainhand", "offhand", "head", "chest", "legs", "feet"), b))
+                                .executes(ctx -> equip(ctx, null))
+                                .then(Commands.argument("item", StringArgumentType.greedyString()).executes(ctx -> equip(ctx, StringArgumentType.getString(ctx, "item"))))))
                 .then(Commands.literal("role")
                         .then(Commands.literal("add").then(Commands.argument("role", IdentifierArgument.id()).executes(ctx -> role(ctx, true))))
                         .then(Commands.literal("remove").then(Commands.argument("role", IdentifierArgument.id()).executes(ctx -> role(ctx, false))))));
@@ -183,6 +188,19 @@ public final class CastCommands {
         Cast.rename(player.level().getServer(), t.get().id(), name);
         Feedback.chat(player, Lang.fmt("msg.named", "name", name));
         if (t.get().kind() == NpcKind.HUMAN && name.length() > 16) Feedback.chat(player, Lang.get("msg.named.long"));
+        return 1;
+    }
+
+    private static int equip(CommandContext<CommandSourceStack> ctx, String item) throws CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
+        Optional<Npc> t = targetOrSay(player);
+        if (t.isEmpty()) return 0;
+        String slot = StringArgumentType.getString(ctx, "slot");
+        if (!Cast.equip(player.level().getServer(), t.get().id(), slot, item)) {
+            Feedback.chat(player, Lang.fmt("msg.equip.bad", "slot", slot, "item", item == null ? "" : item));
+            return 0;
+        }
+        Feedback.chat(player, Lang.fmt(item == null ? "msg.equip.cleared" : "msg.equip.done", "name", t.get().name(), "slot", slot, "item", item == null ? "" : item));
         return 1;
     }
 

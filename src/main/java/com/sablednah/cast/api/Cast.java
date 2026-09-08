@@ -133,6 +133,21 @@ public final class Cast {
         Npcs.setAnchored(server, npcId, anchored);
     }
 
+    /**
+     * Dress an NPC: {@code slot} is mainhand / offhand / head / chest / legs / feet,
+     * {@code item} an item string as {@code /give} takes it (null or blank clears the
+     * slot). Vanilla clients see it on phantoms and bodies alike. False when the slot
+     * or the item is wrong, with the reason logged.
+     */
+    public static boolean equip(MinecraftServer server, UUID npcId, String slot, String item) {
+        return Npcs.equip(server, npcId, slot, item);
+    }
+
+    /** What an NPC is wearing, by slot name. */
+    public static java.util.Map<String, String> equipment(MinecraftServer server, UUID npcId) {
+        return com.sablednah.cast.core.NpcStore.get(server).get(npcId).map(com.sablednah.cast.core.NpcSpec::equipment).orElse(java.util.Map.of());
+    }
+
     public static void rename(MinecraftServer server, UUID npcId, String name) {
         Npcs.rename(server, npcId, name);
     }

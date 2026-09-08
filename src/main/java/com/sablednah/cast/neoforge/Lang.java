@@ -43,6 +43,9 @@ public final class Lang {
         def("msg.skin", "{prefix}&7Skin of &f{account}&7 requested for &f{name}&7; it lands when Mojang answers.");
         def("msg.skin.off", "{prefix}&7Skin fetching is off in config/cast; the NPC keeps the default skin.");
         def("msg.named", "{prefix}&7Renamed to &f{name}&7.");
+        def("msg.equip.done", "{prefix}&7{name} now has &f{item}&7 in {slot}.");
+        def("msg.equip.cleared", "{prefix}&7{name}'s {slot} is empty.");
+        def("msg.equip.bad", "{prefix}&cNo. Slots are mainhand, offhand, head, chest, legs, feet; the item is written as /give takes it. Got '{slot}' and '{item}'.");
         def("msg.named.long", "{prefix}&7Note: a human's name tag shows the first 16 characters.");
         def("msg.look", "{prefix}&7Looking at players: &f{value}&7.");
         def("msg.role.added", "{prefix}&7Role &f{role}&7 added.");
