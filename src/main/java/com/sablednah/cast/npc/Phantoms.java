@@ -85,6 +85,15 @@ public final class Phantoms {
             send(viewer, new ClientboundSetEntityDataPacket(npc.getId(), values));
         }
         send(viewer, new ClientboundRotateHeadPacket(npc, toByte(npc.getYHeadRot())));
+        var worn = Equipment.worn(npc);
+        if (!worn.isEmpty()) send(viewer, new net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket(npc.getId(), worn));
+    }
+
+    /** What the phantom holds changed: every viewer is told (an empty list clears nothing, so send every slot). */
+    public static void broadcastEquipment(ServerLevel level, HumanNpc npc) {
+        List<com.mojang.datafixers.util.Pair<net.minecraft.world.entity.EquipmentSlot, net.minecraft.world.item.ItemStack>> all = new java.util.ArrayList<>();
+        for (var slot : net.minecraft.world.entity.EquipmentSlot.values()) all.add(com.mojang.datafixers.util.Pair.of(slot, npc.getItemBySlot(slot)));
+        for (ServerPlayer p : viewersOf(level, npc)) send(p, new net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket(npc.getId(), all));
     }
 
     public static void hide(ServerPlayer viewer, HumanNpc npc) {

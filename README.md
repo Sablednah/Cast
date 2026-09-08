@@ -55,3 +55,8 @@ export JAVA_HOME=/path/to/jdk21
 ## Licence
 
 MIT.
+
+
+## Dressing
+
+`/cast equip <slot> <item>` dresses the NPC you are looking at (mainhand, offhand, head, chest, legs, feet; the item written as `/give` takes it, blank to clear). Vanilla clients see it on phantoms and bodies alike, and it survives restarts. From code: `Cast.equip(server, id, slot, item)` and `Cast.equipment(server, id)`.

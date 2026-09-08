@@ -54,6 +54,7 @@ public final class Bodies {
         mob.setCustomName(Feedback.colored(spec.name()));
         mob.setCustomNameVisible(true);
         mob.setPersistenceRequired();
+        Equipment.apply(mob, spec);
         mob.setInvulnerable(true);
         mob.setNoAi(false);
         var kb = mob.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.KNOCKBACK_RESISTANCE);

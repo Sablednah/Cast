@@ -1,6 +1,7 @@
 package com.sablednah.cast.core;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -31,7 +32,9 @@ import net.minecraft.world.phys.Vec3;
  */
 public record NpcSpec(UUID id, NpcKind kind, String name, Optional<String> skin, Optional<Identifier> entityType,
         Identifier dimension, Vec3 pos, float yaw, float pitch, List<Identifier> roles, boolean lookAtPlayers,
-        Optional<UUID> entityUuid) {
+        Optional<UUID> entityUuid, Map<String, String> equipment) {
+
+    /** slot name (mainhand, offhand, head, chest, legs, feet) -> an item string as /give takes it. */
 
     public static final Codec<NpcSpec> CODEC = RecordCodecBuilder.create(i -> i.group(
             UUIDUtil.CODEC.fieldOf("id").forGetter(NpcSpec::id),
@@ -45,31 +48,36 @@ public record NpcSpec(UUID id, NpcKind kind, String name, Optional<String> skin,
             Codec.FLOAT.optionalFieldOf("pitch", 0F).forGetter(NpcSpec::pitch),
             Identifier.CODEC.listOf().optionalFieldOf("roles", List.of()).forGetter(NpcSpec::roles),
             Codec.BOOL.optionalFieldOf("look_at_players", true).forGetter(NpcSpec::lookAtPlayers),
-            UUIDUtil.CODEC.optionalFieldOf("entity_uuid").forGetter(NpcSpec::entityUuid))
+            UUIDUtil.CODEC.optionalFieldOf("entity_uuid").forGetter(NpcSpec::entityUuid),
+            Codec.unboundedMap(Codec.STRING, Codec.STRING).optionalFieldOf("equipment", Map.of()).forGetter(NpcSpec::equipment))
             .apply(i, NpcSpec::new));
 
     public NpcSpec withName(String n) {
-        return new NpcSpec(id, kind, n, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid);
+        return new NpcSpec(id, kind, n, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, equipment);
     }
 
     public NpcSpec withSkin(Optional<String> s) {
-        return new NpcSpec(id, kind, name, s, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid);
+        return new NpcSpec(id, kind, name, s, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, equipment);
     }
 
     public NpcSpec withPose(Identifier dim, Vec3 p, float y, float x) {
-        return new NpcSpec(id, kind, name, skin, entityType, dim, p, y, x, roles, lookAtPlayers, entityUuid);
+        return new NpcSpec(id, kind, name, skin, entityType, dim, p, y, x, roles, lookAtPlayers, entityUuid, equipment);
     }
 
     public NpcSpec withRoles(List<Identifier> r) {
-        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, r, lookAtPlayers, entityUuid);
+        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, r, lookAtPlayers, entityUuid, equipment);
     }
 
     public NpcSpec withLook(boolean look) {
-        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, look, entityUuid);
+        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, look, entityUuid, equipment);
+    }
+
+    public NpcSpec withEquipment(Map<String, String> e) {
+        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, e);
     }
 
     public NpcSpec withEntityUuid(Optional<UUID> u) {
-        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, u);
+        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, u, equipment);
     }
 
     /** The profile name a client will accept: at most 16 characters. */
