@@ -2,10 +2,9 @@
   "required": true,
   "minVersion": "0.8.5",
   "package": "com.sablednah.cast.mixin",
-  "compatibilityLevel": "JAVA_21",
+  "compatibilityLevel": "JAVA_25",
   "mixins": [
-    "ServerGamePacketListenerImplMixin",
-    "InteractPacketAccessor"
+    "ServerGamePacketListenerImplMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -39,7 +39,7 @@ public final class NpcStore extends SavedData {
             Codec.unboundedMap(Codec.STRING, Skin.CODEC).optionalFieldOf("skins", Map.of()).forGetter(s -> s.skins))
             .apply(i, NpcStore::new));
 
-    public static final SavedDataType<NpcStore> TYPE = new SavedDataType<>("cast_npcs", NpcStore::new, CODEC, null);
+    public static final SavedDataType<NpcStore> TYPE = new SavedDataType<>(net.minecraft.resources.Identifier.fromNamespaceAndPath("cast", "npcs"), NpcStore::new, CODEC, null);
 
     private final Map<UUID, NpcSpec> npcs = new LinkedHashMap<>();
     private final Map<String, Skin> skins = new LinkedHashMap<>();

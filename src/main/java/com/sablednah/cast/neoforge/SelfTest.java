@@ -198,16 +198,17 @@ public final class SelfTest {
             for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) level.setChunkForced(cx + dx, cz + dz, false);
         }
 
-        // The accessor mixin must be LISTED in cast.mixins.json, not just present in the package: an
-        // unlisted accessor throws IllegalClassLoadError on the first interact packet of any kind --
-        // which is every hit on every mob. Found by Sable hitting a zombie. Exercise it here.
+        // 26.2: the interact packet is a record, so no accessor mixin is needed; the 1.21.11 line
+        // paid for an unlisted one with a crash on every hit. Build one the way the client does and
+        // read it back, so a future shape change is caught here rather than by a player.
         try {
             var probe = new FakePlayer(level, new GameProfile(UUID.nameUUIDFromBytes("cast:probe".getBytes()), "CastProbe"));
-            var packet = net.minecraft.network.protocol.game.ServerboundInteractPacket.createAttackPacket(probe, false);
-            check("interact accessor mixin is applied", ((com.sablednah.cast.mixin.InteractPacketAccessor) packet).cast$entityId() == probe.getId());
+            var packet = new net.minecraft.network.protocol.game.ServerboundInteractPacket(probe.getId(),
+                    net.minecraft.world.InteractionHand.MAIN_HAND, net.minecraft.world.phys.Vec3.ZERO, false);
+            check("interact packet carries the entity id", packet.entityId() == probe.getId());
             probe.discard();
         } catch (Throwable t) {
-            check("interact accessor mixin is applied (" + t + ")", false);
+            check("interact packet carries the entity id (" + t + ")", false);
         }
 
         check("lang catalogue", Lang.catalogueSize() > 15 && !Feedback.colored("&6x").getString().contains("§"));

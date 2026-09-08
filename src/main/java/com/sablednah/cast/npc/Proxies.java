@@ -69,7 +69,7 @@ public final class Proxies {
 
     /** A proxy with no live phantom behind it: a leftover from a restart. */
     public static boolean isOrphan(Entity entity) {
-        if (!(entity instanceof ArmorStand) || !entity.getTags().contains(TAG)) return false;
+        if (!(entity instanceof ArmorStand) || !entity.entityTags().contains(TAG)) return false;
         return !PROXIES.containsValue(entity);
     }
 
@@ -79,7 +79,7 @@ public final class Proxies {
     }
 
     public static boolean isProxy(Entity entity) {
-        return entity instanceof ArmorStand && entity.getTags().contains(TAG);
+        return entity instanceof ArmorStand && entity.entityTags().contains(TAG);
     }
 
     public static void clear() {
