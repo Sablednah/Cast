@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased — 0.1.0
+## Unreleased
+
+- Dressing: `/cast equip <slot> <item>` and `Cast.equip`; items kept as /give strings in the spec, built at use time, sent to viewers of a phantom and set on a body. — 0.1.0
 
 - Human phantoms: player-model NPCs rendered by packets, never in a level;
   signed skins from Mojang, cached; one mixin to catch right-clicks.

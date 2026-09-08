@@ -53,7 +53,7 @@ public final class Npcs {
 
     public static UUID spawnHuman(ServerLevel level, Vec3 pos, float yaw, String name, Optional<String> skin, List<Identifier> roles) {
         NpcSpec spec = new NpcSpec(UUID.randomUUID(), NpcKind.HUMAN, name, skin, Optional.empty(),
-                level.dimension().identifier(), pos, yaw, 0F, roles, true, Optional.empty());
+                level.dimension().identifier(), pos, yaw, 0F, roles, true, Optional.empty(), java.util.Map.of());
         NpcStore.get(level.getServer()).put(spec);
         skin.ifPresent(s -> Skins.ensure(level.getServer(), s, spec.id()));
         tickOne(level.getServer(), spec);
@@ -62,7 +62,7 @@ public final class Npcs {
 
     public static UUID spawnMob(ServerLevel level, Vec3 pos, float yaw, Identifier entityType, String name, List<Identifier> roles) {
         NpcSpec spec = new NpcSpec(UUID.randomUUID(), NpcKind.MOB, name, Optional.empty(), Optional.of(entityType),
-                level.dimension().identifier(), pos, yaw, 0F, roles, true, Optional.empty());
+                level.dimension().identifier(), pos, yaw, 0F, roles, true, Optional.empty(), java.util.Map.of());
         NpcStore.get(level.getServer()).put(spec);
         tickOne(level.getServer(), spec);
         return spec.id();
@@ -151,6 +151,7 @@ public final class Npcs {
             }
             if (human == null) {
                 human = HumanNpc.create(level, spec, NpcStore.get(server));
+                Equipment.apply(human, spec);
                 HUMANS.put(spec.id(), human);
             }
             Proxies.ensure(level, human, spec);
@@ -350,6 +351,29 @@ public final class Npcs {
             if (spec.kind() == NpcKind.HUMAN) rebody(server, npcId);
             else { ServerLevel level = level(server, spec); if (level != null) body(level, spec).ifPresent(m -> Bodies.configure(m, spec.withName(name))); }
         });
+    }
+
+    /** Put {@code item} (a /give string; null or blank clears) in {@code slot}; false if the slot or item is wrong. */
+    public static boolean equip(MinecraftServer server, UUID npcId, String slot, String item) {
+        NpcStore store = NpcStore.get(server);
+        Optional<NpcSpec> found = store.get(npcId);
+        if (found.isEmpty() || Equipment.slot(slot).isEmpty()) return false;
+        NpcSpec spec = found.get();
+        String key = Equipment.slot(slot).get().getName();
+        boolean clear = item == null || item.isBlank();
+        if (!clear && Equipment.parse(server.registryAccess(), item, spec.name()).isEmpty()) return false;
+        Map<String, String> e = new HashMap<>(spec.equipment());
+        if (clear) e.remove(key); else e.put(key, item.trim());
+        NpcSpec next = spec.withEquipment(e);
+        store.put(next);
+        ServerLevel level = level(server, next);
+        if (next.kind() == NpcKind.HUMAN) {
+            HumanNpc human = HUMANS.get(npcId);
+            if (human != null && level != null) { Equipment.apply(human, next); Phantoms.broadcastEquipment(level, human); }
+        } else if (level != null) {
+            body(level, next).ifPresent(m -> Equipment.apply(m, next));
+        }
+        return true;
     }
 
     public static void setSkin(MinecraftServer server, UUID npcId, Optional<String> skin) {
