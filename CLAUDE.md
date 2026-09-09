@@ -106,6 +106,8 @@ upgraded in place), `cast.mixins.json` (`JAVA_25`) and the 26.2 drift:
 - `sendSystemMessage(text, overlay)` for `displayClientMessage`; `EntityTypes.*`
   for `EntityType.*`; `entityTags()` for `getTags()`; `ChatFormatting` is a bare
   enum, so `Feedback` owns the five formatting codes.
+- `ItemParser.parse` returns an `ItemInput` record on 26.x (`ItemResult` on 1.21.11); same shape,
+  different name (`Equipment.parse`).
 - A 26.2 dev server with no player loads **no spawn chunks**; the self-test
   forces a 3x3 around the spawn chunk and keeps every actor inside the middle one.
 
