@@ -76,6 +76,7 @@ public final class Npcs {
         spec.ifPresent(s -> {
             ServerLevel level = level(server, s);
             HumanNpc human = HUMANS.remove(npcId);
+            Gravity.settle(npcId);
             if (human != null && level != null) Phantoms.hideFromAll(level, human);
             Proxies.remove(npcId);
             if (level != null) body(level, s).ifPresent(Entity::discard);
@@ -102,6 +103,9 @@ public final class Npcs {
     public static void setAnchored(MinecraftServer server, UUID npcId, boolean anchored) {
         if (!anchored) {
             UNANCHORED.add(npcId);
+            Gravity.settle(npcId);
+            Mob held = MOBS.get(npcId);
+            if (held != null) held.setNoGravity(false);
             return;
         }
         UNANCHORED.remove(npcId);
@@ -154,18 +158,26 @@ public final class Npcs {
                 Equipment.apply(human, spec);
                 HUMANS.put(spec.id(), human);
             }
+            boolean realising = false;
             if (!spec.defyGravity()) {
                 Vec3 landing = Gravity.landing(level, spec.pos());
                 if (landing.y < spec.pos().y) {
-                    Vec3 from = human.position();
-                    human.snapTo(landing.x, landing.y, landing.z, human.getYRot(), human.getXRot());
-                    spec = spec.withPose(spec.dimension(), landing, spec.yaw(), spec.pitch());
-                    NpcStore.get(server).put(spec);
-                    Phantoms.broadcastMove(level, human, from);
+                    final HumanNpc h = human;
+                    if (Gravity.coyote(spec.id(), () -> glance(level, h, 75F), () -> glance(level, h, -15F))) {
+                        Vec3 from = human.position();
+                        human.snapTo(landing.x, landing.y, landing.z, human.getYRot(), 0F);
+                        spec = spec.withPose(spec.dimension(), landing, spec.yaw(), spec.pitch());
+                        NpcStore.get(server).put(spec);
+                        Phantoms.broadcastMove(level, human, from);
+                    } else {
+                        realising = true;
+                    }
+                } else {
+                    Gravity.settle(spec.id());
                 }
             }
             Proxies.ensure(level, human, spec);
-            if (spec.lookAtPlayers()) look(level, human, spec);
+            if (spec.lookAtPlayers() && !realising) look(level, human, spec);
             Phantoms.update(level, human, spec);
         } else {
             if (!loaded) return;
@@ -182,6 +194,12 @@ public final class Npcs {
                 NpcStore.get(server).put(fresh.withEntityUuid(Optional.of(mob.getUUID())));
             });
         }
+    }
+
+    /** Tilt the head: the look-down and the look-back-up of the gag. */
+    private static void glance(ServerLevel level, HumanNpc human, float pitch) {
+        human.setXRot(pitch);
+        Phantoms.broadcastRotation(level, human);
     }
 
     /** Turn a phantom towards the nearest player in look range, or back to rest. */
@@ -497,6 +515,7 @@ public final class Npcs {
         }
         HUMANS.clear();
         MOBS.clear();
+        Gravity.clear();
         UNANCHORED.clear();
         Proxies.clear();
         Phantoms.clear();
