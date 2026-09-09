@@ -32,7 +32,9 @@ import net.minecraft.world.phys.Vec3;
  */
 public record NpcSpec(UUID id, NpcKind kind, String name, Optional<String> skin, Optional<Identifier> entityType,
         Identifier dimension, Vec3 pos, float yaw, float pitch, List<Identifier> roles, boolean lookAtPlayers,
-        Optional<UUID> entityUuid, Map<String, String> equipment) {
+        Optional<UUID> entityUuid, Map<String, String> equipment, boolean defyGravity) {
+
+    /** {@code defyGravity}: stay exactly where placed even with nothing underneath. Off, an NPC drops to the ground and the anchor follows. */
 
     /** slot name (mainhand, offhand, head, chest, legs, feet) -> an item string as /give takes it. */
 
@@ -49,35 +51,40 @@ public record NpcSpec(UUID id, NpcKind kind, String name, Optional<String> skin,
             Identifier.CODEC.listOf().optionalFieldOf("roles", List.of()).forGetter(NpcSpec::roles),
             Codec.BOOL.optionalFieldOf("look_at_players", true).forGetter(NpcSpec::lookAtPlayers),
             UUIDUtil.CODEC.optionalFieldOf("entity_uuid").forGetter(NpcSpec::entityUuid),
-            Codec.unboundedMap(Codec.STRING, Codec.STRING).optionalFieldOf("equipment", Map.of()).forGetter(NpcSpec::equipment))
+            Codec.unboundedMap(Codec.STRING, Codec.STRING).optionalFieldOf("equipment", Map.of()).forGetter(NpcSpec::equipment),
+            Codec.BOOL.optionalFieldOf("defy_gravity", false).forGetter(NpcSpec::defyGravity))
             .apply(i, NpcSpec::new));
 
     public NpcSpec withName(String n) {
-        return new NpcSpec(id, kind, n, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, equipment);
+        return new NpcSpec(id, kind, n, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, equipment, defyGravity);
     }
 
     public NpcSpec withSkin(Optional<String> s) {
-        return new NpcSpec(id, kind, name, s, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, equipment);
+        return new NpcSpec(id, kind, name, s, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, equipment, defyGravity);
     }
 
     public NpcSpec withPose(Identifier dim, Vec3 p, float y, float x) {
-        return new NpcSpec(id, kind, name, skin, entityType, dim, p, y, x, roles, lookAtPlayers, entityUuid, equipment);
+        return new NpcSpec(id, kind, name, skin, entityType, dim, p, y, x, roles, lookAtPlayers, entityUuid, equipment, defyGravity);
     }
 
     public NpcSpec withRoles(List<Identifier> r) {
-        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, r, lookAtPlayers, entityUuid, equipment);
+        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, r, lookAtPlayers, entityUuid, equipment, defyGravity);
     }
 
     public NpcSpec withLook(boolean look) {
-        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, look, entityUuid, equipment);
+        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, look, entityUuid, equipment, defyGravity);
     }
 
     public NpcSpec withEquipment(Map<String, String> e) {
-        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, e);
+        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, e, defyGravity);
+    }
+
+    public NpcSpec withDefyGravity(boolean d) {
+        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, equipment, d);
     }
 
     public NpcSpec withEntityUuid(Optional<UUID> u) {
-        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, u, equipment);
+        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, u, equipment, defyGravity);
     }
 
     /** The profile name a client will accept: at most 16 characters. */
