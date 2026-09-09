@@ -76,12 +76,27 @@ public final class Bodies {
      * (players bump into it) without being herded around the map.
      */
     public static void maintain(Mob mob, NpcSpec spec, boolean anchored) {
+        maintain(mob, spec, anchored, null);
+    }
+
+    /**
+     * Keep a body where it belongs. Anchored, a shove is undone -- but a fall is
+     * not: straight down from the anchor with nothing under it, the body lands
+     * (vanilla physics) and {@code adopt} is told the new spot, unless the spec
+     * defies gravity, in which case it is hauled back up like any other shove.
+     */
+    public static void maintain(Mob mob, NpcSpec spec, boolean anchored, java.util.function.Consumer<net.minecraft.world.phys.Vec3> adopt) {
         Brains.neutralise(mob);
         if (!mob.isInvulnerable()) mob.setInvulnerable(true);
-        if (anchored && mob.distanceToSqr(spec.pos()) > 1.0D) {
-            mob.snapTo(spec.pos().x, spec.pos().y, spec.pos().z, mob.getYRot(), mob.getXRot());
-            mob.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
+        if (!anchored || mob.distanceToSqr(spec.pos()) <= 1.0D) return;
+        double dx = mob.getX() - spec.pos().x, dz = mob.getZ() - spec.pos().z;
+        boolean straightDown = dx * dx + dz * dz < 1.0D && mob.getY() < spec.pos().y;
+        if (straightDown && !spec.defyGravity()) {
+            if (mob.onGround() && adopt != null) adopt.accept(mob.position()); // landed: this is home now
+            return; // still falling: let it
         }
+        mob.snapTo(spec.pos().x, spec.pos().y, spec.pos().z, mob.getYRot(), mob.getXRot());
+        mob.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
     }
 
     private Bodies() {}

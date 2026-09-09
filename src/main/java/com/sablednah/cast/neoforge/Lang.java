@@ -48,6 +48,8 @@ public final class Lang {
         def("msg.equip.bad", "{prefix}&cNo. Slots are mainhand, offhand, head, chest, legs, feet; the item is written as /give takes it. Got '{slot}' and '{item}'.");
         def("msg.named.long", "{prefix}&7Note: a human's name tag shows the first 16 characters.");
         def("msg.look", "{prefix}&7Looking at players: &f{value}&7.");
+        def("msg.gravity.defied", "{prefix}&7{name} now defies gravity. Mine away.");
+        def("msg.gravity.obeyed", "{prefix}&7{name} obeys gravity again, and will land where the ground is.");
         def("msg.role.added", "{prefix}&7Role &f{role}&7 added.");
         def("msg.role.removed", "{prefix}&7Role &f{role}&7 removed.");
         def("msg.role.unknown", "{prefix}&7Nothing has registered a role called &f{role}&7 (known: {known}). Added anyway; it will act once something does.");

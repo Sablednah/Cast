@@ -74,7 +74,11 @@ public final class SelfTest {
         // over a chunk edge is unloaded, silently never spawns, and the first orElseThrow on it
         // takes the server down. Force the neighbours too, for the walk-away checks.
         var spawnPos = level.getRespawnData().globalPos().pos();
-        Vec3 here = new Vec3(((spawnPos.getX() >> 4) << 4) + 8.5, spawnPos.getY(), ((spawnPos.getZ() >> 4) << 4) + 8.5);
+        // On the actual surface: NPCs obey gravity now, and a spawn point a few blocks up would drop them mid-test.
+        int hx = ((spawnPos.getX() >> 4) << 4) + 8, hz = ((spawnPos.getZ() >> 4) << 4) + 8;
+        level.getChunk(hx >> 4, hz >> 4);
+        int hy = level.getHeightmapPos(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, new net.minecraft.core.BlockPos(hx, 0, hz)).getY();
+        Vec3 here = new Vec3(hx + 0.5, hy, hz + 0.5);
         int cx = ((int) Math.floor(here.x)) >> 4, cz = ((int) Math.floor(here.z)) >> 4;
         for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) level.setChunkForced(cx + dx, cz + dz, true);
         NpcStore store = NpcStore.get(server);
@@ -186,6 +190,28 @@ public final class SelfTest {
             check("drive moves the spec", Cast.byId(server, human).map(n -> n.pos().z > here.z + 2).orElse(false));
             check("say with nobody near returns 0", Cast.say(server, human, "hello?", 8.0) == 0);
             check("rename lands", Cast.byId(server, human).map(n -> n.name().equals("Renamed Again")).orElse(false));
+            // Gravity: a phantom over air drops to the ground and its anchor follows; defying it, it hangs.
+            {
+                Vec3 gBefore = Cast.byId(server, human).map(Npc::pos).orElse(here);
+                var under = net.minecraft.core.BlockPos.containing(gBefore.x, gBefore.y - 1, gBefore.z);
+                var was = level.getBlockState(under);
+                level.setBlockAndUpdate(under, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+                level.setBlockAndUpdate(under.below(), net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+                Npcs.tick(server);
+                Vec3 after = Cast.byId(server, human).map(Npc::pos).orElse(gBefore);
+                check("gravity: a phantom with nothing under it drops (" + gBefore.y + " -> " + after.y + ")", after.y < gBefore.y - 0.5);
+                check("gravity: the anchor followed it down", Cast.byId(server, human).flatMap(Npc::entity).map(e -> Math.abs(e.getY() - after.y) < 0.01).orElse(false));
+                Cast.setDefyGravity(server, human, true);
+                var under2 = net.minecraft.core.BlockPos.containing(after.x, after.y - 1, after.z);
+                var was2 = level.getBlockState(under2);
+                level.setBlockAndUpdate(under2, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+                Npcs.tick(server);
+                check("gravity: defied, it hangs there", Cast.byId(server, human).map(n -> Math.abs(n.pos().y - after.y) < 0.01).orElse(false));
+                level.setBlockAndUpdate(under2, was2);
+                Cast.setDefyGravity(server, human, false);
+                level.setBlockAndUpdate(under, was);
+                level.setBlockAndUpdate(under.below(), was);
+            }
             // Dressing: a /give string in a slot, on a phantom and on a body; a bad slot or item is refused.
             check("equip: a potion in the phantom's hand", Cast.equip(server, human, "mainhand", "minecraft:potion[potion_contents={potion:'minecraft:healing'}]")
                     && Cast.byId(server, human).flatMap(Npc::entity).map(e -> ((net.minecraft.world.entity.LivingEntity) e).getMainHandItem().is(net.minecraft.world.item.Items.POTION)).orElse(false)); // fresh handle: rename rebodied the phantom

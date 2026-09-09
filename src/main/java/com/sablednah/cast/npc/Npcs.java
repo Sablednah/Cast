@@ -53,7 +53,7 @@ public final class Npcs {
 
     public static UUID spawnHuman(ServerLevel level, Vec3 pos, float yaw, String name, Optional<String> skin, List<Identifier> roles) {
         NpcSpec spec = new NpcSpec(UUID.randomUUID(), NpcKind.HUMAN, name, skin, Optional.empty(),
-                level.dimension().identifier(), pos, yaw, 0F, roles, true, Optional.empty(), java.util.Map.of());
+                level.dimension().identifier(), pos, yaw, 0F, roles, true, Optional.empty(), java.util.Map.of(), false);
         NpcStore.get(level.getServer()).put(spec);
         skin.ifPresent(s -> Skins.ensure(level.getServer(), s, spec.id()));
         tickOne(level.getServer(), spec);
@@ -62,7 +62,7 @@ public final class Npcs {
 
     public static UUID spawnMob(ServerLevel level, Vec3 pos, float yaw, Identifier entityType, String name, List<Identifier> roles) {
         NpcSpec spec = new NpcSpec(UUID.randomUUID(), NpcKind.MOB, name, Optional.empty(), Optional.of(entityType),
-                level.dimension().identifier(), pos, yaw, 0F, roles, true, Optional.empty(), java.util.Map.of());
+                level.dimension().identifier(), pos, yaw, 0F, roles, true, Optional.empty(), java.util.Map.of(), false);
         NpcStore.get(level.getServer()).put(spec);
         tickOne(level.getServer(), spec);
         return spec.id();
@@ -154,6 +154,16 @@ public final class Npcs {
                 Equipment.apply(human, spec);
                 HUMANS.put(spec.id(), human);
             }
+            if (!spec.defyGravity()) {
+                Vec3 landing = Gravity.landing(level, spec.pos());
+                if (landing.y < spec.pos().y) {
+                    Vec3 from = human.position();
+                    human.snapTo(landing.x, landing.y, landing.z, human.getYRot(), human.getXRot());
+                    spec = spec.withPose(spec.dimension(), landing, spec.yaw(), spec.pitch());
+                    NpcStore.get(server).put(spec);
+                    Phantoms.broadcastMove(level, human, from);
+                }
+            }
             Proxies.ensure(level, human, spec);
             if (spec.lookAtPlayers()) look(level, human, spec);
             Phantoms.update(level, human, spec);
@@ -161,12 +171,15 @@ public final class Npcs {
             if (!loaded) return;
             Optional<Mob> body = body(level, spec);
             if (body.isPresent()) {
-                Bodies.maintain(body.get(), spec, isAnchored(spec.id()));
+                final NpcSpec here = spec;
+                Bodies.maintain(body.get(), spec, isAnchored(spec.id()),
+                        landed -> NpcStore.get(server).put(here.withPose(here.dimension(), landed, here.yaw(), here.pitch())));
                 return;
             }
-            Bodies.spawn(level, spec).ifPresent(mob -> {
-                MOBS.put(spec.id(), mob);
-                NpcStore.get(server).put(spec.withEntityUuid(Optional.of(mob.getUUID())));
+            final NpcSpec fresh = spec; // spec is reassigned on the human path above, so the lambda needs a final copy
+            Bodies.spawn(level, fresh).ifPresent(mob -> {
+                MOBS.put(fresh.id(), mob);
+                NpcStore.get(server).put(fresh.withEntityUuid(Optional.of(mob.getUUID())));
             });
         }
     }
@@ -388,6 +401,11 @@ public final class Npcs {
     public static void setRoles(MinecraftServer server, UUID npcId, List<Identifier> roles) {
         NpcStore store = NpcStore.get(server);
         store.get(npcId).ifPresent(spec -> store.put(spec.withRoles(roles)));
+    }
+
+    public static void setDefyGravity(MinecraftServer server, UUID npcId, boolean defy) {
+        NpcStore store = NpcStore.get(server);
+        store.get(npcId).ifPresent(spec -> store.put(spec.withDefyGravity(defy)));
     }
 
     public static void setLook(MinecraftServer server, UUID npcId, boolean look) {
