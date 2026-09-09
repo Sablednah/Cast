@@ -108,7 +108,8 @@ public final class Npcs {
             if (held != null) held.setNoGravity(false);
             return;
         }
-        UNANCHORED.remove(npcId);
+        boolean wasFree = UNANCHORED.remove(npcId);
+        if (wasFree) Gravity.releasedToLand(npcId); // let vanilla finish any fall before we hold it
         NpcStore store = NpcStore.get(server);
         store.get(npcId).ifPresent(spec -> {
             ServerLevel level = level(server, spec);

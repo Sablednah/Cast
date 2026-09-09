@@ -90,8 +90,17 @@ public final class Bodies {
         if (!mob.isInvulnerable()) mob.setInvulnerable(true);
         // An anchored body is held up by us, not by the ground, so the gag can play before it drops;
         // let go (possessed, walked about) and vanilla gravity is back.
-        mob.setNoGravity(anchored);
-        if (!anchored) { Gravity.settle(spec.id()); return; }
+        if (!anchored) { mob.setNoGravity(false); Gravity.settle(spec.id()); return; }
+        if (Gravity.landingAfterRelease(spec.id()) && !spec.defyGravity()) {
+            // Re-anchored after a release (possession ended, a behaviour stopped). Vanilla gravity keeps it
+            // until it lands: a body let go of mid-air falls, and where it lands is home. Only then do
+            // we hold it up ourselves. (Otherwise a rooftop release pinned a villager to the sky.)
+            mob.setNoGravity(false);
+            if (!mob.onGround()) return;
+            if (adopt != null && mob.distanceToSqr(spec.pos()) > 0.01D) adopt.accept(mob.position());
+            Gravity.landed(spec.id());
+        }
+        mob.setNoGravity(true);
         if (!spec.defyGravity()) {
             net.minecraft.world.phys.Vec3 landing = Gravity.landing(mob.level() instanceof net.minecraft.server.level.ServerLevel sl ? sl : null, spec.pos());
             if (landing.y < spec.pos().y) {
