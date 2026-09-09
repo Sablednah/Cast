@@ -148,6 +148,15 @@ public final class Cast {
         return com.sablednah.cast.core.NpcStore.get(server).get(npcId).map(com.sablednah.cast.core.NpcSpec::equipment).orElse(java.util.Map.of());
     }
 
+    /**
+     * Named for the laugh, kept for the use: an NPC that defies gravity stays exactly
+     * where it was put with nothing underneath. Off (the default), it drops to the
+     * ground once a second and its anchor follows it down.
+     */
+    public static void setDefyGravity(MinecraftServer server, UUID npcId, boolean defy) {
+        Npcs.setDefyGravity(server, npcId, defy);
+    }
+
     public static void rename(MinecraftServer server, UUID npcId, String name) {
         Npcs.rename(server, npcId, name);
     }

@@ -57,6 +57,10 @@ export JAVA_HOME=/path/to/jdk21
 MIT.
 
 
+## Gravity
+
+NPCs obey gravity: with nothing under their feet they drop to the ground once a second and their anchor follows them down, phantom or body alike. `/cast defygravity true` (or `Cast.setDefyGravity`) keeps one exactly where it was put with nothing underneath. Named for the laugh, kept for the use.
+
 ## Dressing
 
 `/cast equip <slot> <item>` dresses the NPC you are looking at (mainhand, offhand, head, chest, legs, feet; the item written as `/give` takes it, blank to clear). Vanilla clients see it on phantoms and bodies alike, and it survives restarts. From code: `Cast.equip(server, id, slot, item)` and `Cast.equipment(server, id)`.

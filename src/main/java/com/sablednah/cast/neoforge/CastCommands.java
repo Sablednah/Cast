@@ -55,6 +55,7 @@ public final class CastCommands {
                 .then(Commands.literal("skin").then(Commands.argument("account", StringArgumentType.word()).executes(CastCommands::skin)))
                 .then(Commands.literal("name").then(Commands.argument("name", StringArgumentType.greedyString()).executes(CastCommands::rename)))
                 .then(Commands.literal("look").then(Commands.argument("on", BoolArgumentType.bool()).executes(CastCommands::look)))
+                .then(Commands.literal("defygravity").then(Commands.argument("on", BoolArgumentType.bool()).executes(CastCommands::defyGravity)))
                 .then(Commands.literal("here").executes(CastCommands::here))
                 .then(Commands.literal("say").then(Commands.argument("text", StringArgumentType.greedyString()).executes(CastCommands::say)))
                 .then(Commands.literal("equip")
@@ -211,6 +212,16 @@ public final class CastCommands {
         boolean on = BoolArgumentType.getBool(ctx, "on");
         Npcs.setLook(player.level().getServer(), t.get().id(), on);
         Feedback.chat(player, Lang.fmt("msg.look", "value", on));
+        return 1;
+    }
+
+    private static int defyGravity(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
+        Optional<Npc> t = targetOrSay(player);
+        if (t.isEmpty()) return 0;
+        boolean on = BoolArgumentType.getBool(ctx, "on");
+        Cast.setDefyGravity(player.level().getServer(), t.get().id(), on);
+        Feedback.chat(player, Lang.fmt(on ? "msg.gravity.defied" : "msg.gravity.obeyed", "name", t.get().name()));
         return 1;
     }
 
