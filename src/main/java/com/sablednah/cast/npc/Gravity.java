@@ -15,6 +15,7 @@ public final class Gravity {
 
     /** Where these feet would land: the same spot if it is already on something, else lower. Never higher. */
     public static Vec3 landing(ServerLevel level, Vec3 feet) {
+        if (level == null) return feet;
         BlockPos below = BlockPos.containing(feet.x, feet.y - 0.001, feet.z);
         int y = below.getY();
         int floor = level.getMinY();
@@ -26,6 +27,31 @@ public final class Gravity {
         double landY = y + 1;
         return landY < feet.y - 0.01 ? new Vec3(feet.x, landY, feet.z) : feet;
     }
+
+    /** Who is mid-realisation, and how far along: 1 = has looked down, 2 = has looked back up. */
+    private static final java.util.Map<java.util.UUID, Integer> COYOTE = new java.util.HashMap<>();
+
+    /**
+     * The gag. Called once a second while the ground is missing: the first call
+     * looks down, the second looks back up, the third says "drop". Wile E. Coyote
+     * never fell before he had time to think about it; neither do these.
+     * Off in config, it is always "drop".
+     */
+    public static boolean coyote(java.util.UUID id, Runnable lookDown, Runnable lookUp) {
+        if (!com.sablednah.cast.CastConfig.COYOTE.get()) return true;
+        int stage = COYOTE.getOrDefault(id, 0);
+        if (stage == 0) { lookDown.run(); COYOTE.put(id, 1); return false; }
+        if (stage == 1) { lookUp.run(); COYOTE.put(id, 2); return false; }
+        COYOTE.remove(id);
+        return true;
+    }
+
+    /** The ground came back (or the NPC went): nothing to realise. */
+    public static void settle(java.util.UUID id) { COYOTE.remove(id); }
+
+    public static boolean realising(java.util.UUID id) { return COYOTE.containsKey(id); }
+
+    public static void clear() { COYOTE.clear(); }
 
     private Gravity() {}
 }

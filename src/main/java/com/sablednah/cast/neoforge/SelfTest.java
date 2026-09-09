@@ -198,14 +198,20 @@ public final class SelfTest {
                 level.setBlockAndUpdate(under, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
                 level.setBlockAndUpdate(under.below(), net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
                 Npcs.tick(server);
+                check("coyote: first it looks down, and does not fall", Cast.byId(server, human).map(n -> n.pos().y == gBefore.y).orElse(false)
+                        && Cast.byId(server, human).flatMap(Npc::entity).map(e -> e.getXRot() > 45F).orElse(false));
+                Npcs.tick(server);
+                check("coyote: then it looks back up, and still does not fall", Cast.byId(server, human).map(n -> n.pos().y == gBefore.y).orElse(false)
+                        && Cast.byId(server, human).flatMap(Npc::entity).map(e -> e.getXRot() < 0F).orElse(false));
+                Npcs.tick(server);
                 Vec3 after = Cast.byId(server, human).map(Npc::pos).orElse(gBefore);
-                check("gravity: a phantom with nothing under it drops (" + gBefore.y + " -> " + after.y + ")", after.y < gBefore.y - 0.5);
+                check("gravity: THEN it drops (" + gBefore.y + " -> " + after.y + ")", after.y < gBefore.y - 0.5);
                 check("gravity: the anchor followed it down", Cast.byId(server, human).flatMap(Npc::entity).map(e -> Math.abs(e.getY() - after.y) < 0.01).orElse(false));
                 Cast.setDefyGravity(server, human, true);
                 var under2 = net.minecraft.core.BlockPos.containing(after.x, after.y - 1, after.z);
                 var was2 = level.getBlockState(under2);
                 level.setBlockAndUpdate(under2, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
-                Npcs.tick(server);
+                Npcs.tick(server); Npcs.tick(server); Npcs.tick(server);
                 check("gravity: defied, it hangs there", Cast.byId(server, human).map(n -> Math.abs(n.pos().y - after.y) < 0.01).orElse(false));
                 level.setBlockAndUpdate(under2, was2);
                 Cast.setDefyGravity(server, human, false);
