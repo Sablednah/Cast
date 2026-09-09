@@ -9,6 +9,7 @@ public final class CastConfig {
 
     public static final ModConfigSpec.IntValue VIEW_RANGE;
     public static final ModConfigSpec.DoubleValue LOOK_RANGE;
+    public static final ModConfigSpec.BooleanValue COYOTE;
     public static final ModConfigSpec.BooleanValue FETCH_SKINS;
 
     static {
@@ -20,6 +21,10 @@ public final class CastConfig {
         LOOK_RANGE = BUILDER
                 .comment("How close (blocks) a player must be for an NPC to turn and look at them.")
                 .defineInRange("lookRange", 8.0D, 0.0D, 32.0D);
+        COYOTE = BUILDER
+                .comment("When the ground goes from under an NPC: look down, look back up at you, THEN fall.",
+                        "Two seconds of dawning realisation. Off, they just drop.")
+                .define("coyote", true);
         BUILDER.pop();
 
         BUILDER.comment("Skins").push("skins");

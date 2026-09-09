@@ -59,7 +59,7 @@ MIT.
 
 ## Gravity
 
-NPCs obey gravity: with nothing under their feet they drop to the ground once a second and their anchor follows them down, phantom or body alike. `/cast defygravity true` (or `Cast.setDefyGravity`) keeps one exactly where it was put with nothing underneath. Named for the laugh, kept for the use.
+NPCs obey gravity: with nothing under their feet they drop to the ground once a second and their anchor follows them down, phantom or body alike. First, though, they look down, then back up at you, and only then fall (`npcs.coyote`; two seconds of dawning realisation, Wile E. Coyote style). `/cast defygravity true` (or `Cast.setDefyGravity`) keeps one exactly where it was put with nothing underneath. Named for the laugh, kept for the use.
 
 ## Dressing
 

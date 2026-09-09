@@ -88,13 +88,25 @@ public final class Bodies {
     public static void maintain(Mob mob, NpcSpec spec, boolean anchored, java.util.function.Consumer<net.minecraft.world.phys.Vec3> adopt) {
         Brains.neutralise(mob);
         if (!mob.isInvulnerable()) mob.setInvulnerable(true);
-        if (!anchored || mob.distanceToSqr(spec.pos()) <= 1.0D) return;
-        double dx = mob.getX() - spec.pos().x, dz = mob.getZ() - spec.pos().z;
-        boolean straightDown = dx * dx + dz * dz < 1.0D && mob.getY() < spec.pos().y;
-        if (straightDown && !spec.defyGravity()) {
-            if (mob.onGround() && adopt != null) adopt.accept(mob.position()); // landed: this is home now
-            return; // still falling: let it
+        // An anchored body is held up by us, not by the ground, so the gag can play before it drops;
+        // let go (possessed, walked about) and vanilla gravity is back.
+        mob.setNoGravity(anchored);
+        if (!anchored) { Gravity.settle(spec.id()); return; }
+        if (!spec.defyGravity()) {
+            net.minecraft.world.phys.Vec3 landing = Gravity.landing(mob.level() instanceof net.minecraft.server.level.ServerLevel sl ? sl : null, spec.pos());
+            if (landing.y < spec.pos().y) {
+                if (Gravity.coyote(spec.id(),
+                        () -> mob.getLookControl().setLookAt(mob.getX(), mob.getY() - 3, mob.getZ()),
+                        () -> mob.getLookControl().setLookAt(mob.getX(), mob.getEyeY() + 2, mob.getZ()))) {
+                    mob.snapTo(landing.x, landing.y, landing.z, mob.getYRot(), 0F);
+                    mob.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
+                    if (adopt != null) adopt.accept(landing);
+                }
+                return;
+            }
+            Gravity.settle(spec.id());
         }
+        if (mob.distanceToSqr(spec.pos()) <= 1.0D) return;
         mob.snapTo(spec.pos().x, spec.pos().y, spec.pos().z, mob.getYRot(), mob.getXRot());
         mob.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
     }
