@@ -36,7 +36,8 @@ public final class Equipment {
     /** Parse an item string; empty (and a warning naming the NPC) when it is wrong. */
     public static ItemStack parse(HolderLookup.Provider registries, String item, String who) {
         try {
-            ItemParser.ItemResult r = new ItemParser(registries).parse(new StringReader(item.trim()));
+            // 26.x: parse() returns an ItemInput (a record of holder + component patch) rather than ItemResult.
+            net.minecraft.commands.arguments.item.ItemInput r = new ItemParser(registries).parse(new StringReader(item.trim()));
             ItemStack stack = new ItemStack(r.item(), 1);
             stack.applyComponents(r.components());
             return stack;
