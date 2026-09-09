@@ -46,12 +46,19 @@ public final class Gravity {
         return true;
     }
 
+    /** Bodies re-anchored since their last landing: vanilla gravity finishes the fall before we hold them. */
+    private static final java.util.Set<java.util.UUID> LANDING = new java.util.HashSet<>();
+
+    public static void releasedToLand(java.util.UUID id) { LANDING.add(id); }
+    public static boolean landingAfterRelease(java.util.UUID id) { return LANDING.contains(id); }
+    public static void landed(java.util.UUID id) { LANDING.remove(id); }
+
     /** The ground came back (or the NPC went): nothing to realise. */
-    public static void settle(java.util.UUID id) { COYOTE.remove(id); }
+    public static void settle(java.util.UUID id) { COYOTE.remove(id); LANDING.remove(id); }
 
     public static boolean realising(java.util.UUID id) { return COYOTE.containsKey(id); }
 
-    public static void clear() { COYOTE.clear(); }
+    public static void clear() { COYOTE.clear(); LANDING.clear(); }
 
     private Gravity() {}
 }

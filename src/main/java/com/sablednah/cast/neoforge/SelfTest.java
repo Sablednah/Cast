@@ -140,6 +140,21 @@ public final class SelfTest {
             Cast.setAnchored(server, zombie, false);
             Npcs.reown(level, reloaded);
             check("reown re-anchors a body whose mover is gone", Npcs.isAnchored(zombie));
+            // Re-anchored in mid-air (a rooftop release): it keeps falling and the landing becomes home, no gag.
+            {
+                Vec3 ground = Cast.byId(server, zombie).map(Npc::pos).orElse(home);
+                Cast.setAnchored(server, zombie, false); // possessed: walked off a roof...
+                zb.snapTo(ground.x, ground.y + 4, ground.z, 0F, 0F);
+                zb.setOnGround(false);
+                Cast.setAnchored(server, zombie, true); // ...and released mid-air: anchors where it is, four blocks up
+                Npcs.tick(server);
+                check("airborne re-anchor: not held up, left to fall", !zb.isNoGravity() && Math.abs(zb.getY() - (ground.y + 4)) < 0.01);
+                zb.snapTo(ground.x, ground.y, ground.z, 0F, 0F); // vanilla physics lands it
+                zb.setOnGround(true);
+                Npcs.tick(server);
+                check("airborne re-anchor: the landing became home and it is held there", zb.isNoGravity()
+                        && Cast.byId(server, zombie).map(n -> Math.abs(n.pos().y - ground.y) < 0.01).orElse(false));
+            }
             }
 
             // --- packets to a viewer: must not throw ---
