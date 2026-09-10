@@ -127,6 +127,7 @@ public final class Npcs {
 
     /** One bad NPC must never take the server tick with it: log once, skip it, keep going. */
     public static void tick(MinecraftServer server) {
+        Phantoms.tickUnlist(server);
         for (NpcSpec spec : List.copyOf(NpcStore.get(server).all())) {
             try {
                 tickOne(server, spec);

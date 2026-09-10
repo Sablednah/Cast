@@ -10,6 +10,7 @@ public final class CastConfig {
     public static final ModConfigSpec.IntValue VIEW_RANGE;
     public static final ModConfigSpec.DoubleValue LOOK_RANGE;
     public static final ModConfigSpec.BooleanValue COYOTE;
+    public static final ModConfigSpec.IntValue TAB_ENTRY_SECONDS;
     public static final ModConfigSpec.BooleanValue FETCH_SKINS;
 
     static {
@@ -25,6 +26,11 @@ public final class CastConfig {
                 .comment("When the ground goes from under an NPC: look down, look back up at you, THEN fall.",
                         "Two seconds of dawning realisation. Off, they just drop.")
                 .define("coyote", true);
+        TAB_ENTRY_SECONDS = BUILDER
+                .comment("A phantom is announced to a client as a player so it renders with a skin; that entry also",
+                        "puts its name in command suggestions (/tp, @-selectors). It is withdrawn this many seconds",
+                        "after the phantom appears, once the client has the skin. 0 keeps it forever.")
+                .defineInRange("tabEntrySeconds", 2, 0, 60);
         BUILDER.pop();
 
         BUILDER.comment("Skins").push("skins");

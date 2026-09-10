@@ -87,6 +87,7 @@ public final class Phantoms {
         send(viewer, new ClientboundRotateHeadPacket(npc, toByte(npc.getYHeadRot())));
         var worn = Equipment.worn(npc);
         if (!worn.isEmpty()) send(viewer, new net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket(npc.getId(), worn));
+        scheduleUnlist(viewer, npc);
     }
 
     /** What the phantom holds changed: every viewer is told (an empty list clears nothing, so send every slot). */
@@ -95,6 +96,41 @@ public final class Phantoms {
         for (var slot : net.minecraft.world.entity.EquipmentSlot.values()) all.add(com.mojang.datafixers.util.Pair.of(slot, npc.getItemBySlot(slot)));
         for (ServerPlayer p : viewersOf(level, npc)) send(p, new net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket(npc.getId(), all));
     }
+
+    /** Player-info entries to withdraw: viewer -> npc -> the game time it is due. */
+    private static final Map<UUID, Map<UUID, Long>> PENDING_UNLIST = new HashMap<>();
+
+    /**
+     * The player-info entry that made the phantom render is also what puts its name in the
+     * client's command suggestions, beside the real players. The client only needs it long
+     * enough to fetch the skin, so it is withdrawn a couple of seconds after the entity
+     * appears (npcs.tabEntrySeconds); the rendered entity keeps the skin it resolved.
+     */
+    private static void scheduleUnlist(ServerPlayer viewer, HumanNpc npc) {
+        int secs = CastConfig.TAB_ENTRY_SECONDS.get();
+        if (secs <= 0) return;
+        PENDING_UNLIST.computeIfAbsent(viewer.getUUID(), k -> new HashMap<>())
+                .put(npc.getUUID(), viewer.level().getGameTime() + secs * 20L);
+    }
+
+    /** Once a second from the NPC tick: withdraw the entries whose time has come. */
+    public static void tickUnlist(net.minecraft.server.MinecraftServer server) {
+        long now = server.overworld().getGameTime();
+        for (var it = PENDING_UNLIST.entrySet().iterator(); it.hasNext();) {
+            var e = it.next();
+            ServerPlayer viewer = server.getPlayerList().getPlayer(e.getKey());
+            if (viewer == null) { it.remove(); continue; }
+            List<UUID> due = new java.util.ArrayList<>();
+            e.getValue().forEach((npc, at) -> { if (now >= at) due.add(npc); });
+            if (!due.isEmpty()) {
+                send(viewer, new ClientboundPlayerInfoRemovePacket(due));
+                due.forEach(e.getValue()::remove);
+            }
+            if (e.getValue().isEmpty()) it.remove();
+        }
+    }
+
+    public static int pendingUnlist() { int n = 0; for (var m : PENDING_UNLIST.values()) n += m.size(); return n; }
 
     public static void hide(ServerPlayer viewer, HumanNpc npc) {
         send(viewer, new ClientboundRemoveEntitiesPacket(npc.getId()));
@@ -158,6 +194,7 @@ public final class Phantoms {
     }
 
     public static void clear() {
+        PENDING_UNLIST.clear();
         VIEWERS.clear();
         PINNED.clear();
     }

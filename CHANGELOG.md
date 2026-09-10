@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Phantom names no longer appear in command suggestions: the player-info entry is withdrawn two seconds after the phantom appears (`npcs.tabEntrySeconds`).
 - Build stamp: commit, branch and time in the manifest, `/cast/build.properties`, the startup line and `/cast status`.
 - The coyote gag (`npcs.coyote`): an NPC losing its footing looks down, looks back up, then falls.
 - Gravity: NPCs drop to the ground when the block under them goes and the anchor follows; `/cast defygravity` keeps one hanging.

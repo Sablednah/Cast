@@ -164,6 +164,13 @@ public final class SelfTest {
             boolean ok = true;
             try { Phantoms.show(viewer, phantom); Phantoms.hide(viewer, phantom); } catch (RuntimeException e) { ok = false; CastMod.LOGGER.error("packets", e); }
             check("phantom show/hide packets build", ok);
+            // The player-info entry is what puts the phantom's name in /tp suggestions; it is withdrawn after it appears.
+            // The viewer is not in the player list, so the withdrawal is exercised through the schedule, not the tick.
+            Phantoms.show(viewer, phantom);
+            check("unlist: a shown phantom's tab entry is scheduled to go", Phantoms.pendingUnlist() >= 1);
+            Phantoms.tickUnlist(server); // the fake viewer is not online: entry dropped, nothing sent, nothing thrown
+            check("unlist: a viewer who is gone is forgotten", Phantoms.pendingUnlist() == 0);
+            Phantoms.hide(viewer, phantom);
 
             // --- roles: dispatch, suppression, unknown role ---
             boolean[] fired = {false};
