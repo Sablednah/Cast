@@ -140,3 +140,7 @@ absent, never a failure. Same filename, different bytes, is the trap it answers.
   namespaced folder; `EntityType.X` → `EntityTypes.X` on 26.2 only.
 - ZombieMod re-genuses natural spawns and clears goals unrecoverably; Cast
   spawns with `EntitySpawnReason.COMMAND` so its roll never touches a body.
+
+## Artwork
+
+Artwork lives in `docs/`: `wordmark-850.png` (CurseForge caps description images at 850 wide; the store page and README use it), `wordmark.png` (full size), `icon.png` (1254 square), `icon-512.png` and `icon-256.png` (Modrinth rejects icons over 256 KiB; the 256 is under it).

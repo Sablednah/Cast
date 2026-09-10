@@ -1,3 +1,5 @@
+![Cast](docs/wordmark-850.png)
+
 # Cast
 
 NPCs a vanilla client can see, for other mods to give roles to. Cast has no

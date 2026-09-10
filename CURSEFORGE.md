@@ -1,3 +1,5 @@
+![Cast](https://raw.githubusercontent.com/Sablednah/Cast/main/docs/wordmark-850.png)
+
 # Cast — people in the world that a vanilla client can see
 
 **NPCs for other mods to give roles to.** A person with a name, a real skin, a coat and a lantern,
