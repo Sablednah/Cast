@@ -61,6 +61,10 @@ MIT.
 
 NPCs obey gravity: with nothing under their feet they drop to the ground once a second and their anchor follows them down, phantom or body alike. First, though, they look down, then back up at you, and only then fall (`npcs.coyote`; two seconds of dawning realisation, Wile E. Coyote style). `/cast defygravity true` (or `Cast.setDefyGravity`) keeps one exactly where it was put with nothing underneath. Named for the laugh, kept for the use.
 
+## The tab list and command suggestions
+
+A phantom is announced to each client as a player so it renders with its skin. That entry never shows in the tab list, but it would put the name in command suggestions (`/tp`, beside `@a`); so it is withdrawn `npcs.tabEntrySeconds` (default 2) after the phantom appears, once the client has the skin. 0 keeps it.
+
 ## Dressing
 
 `/cast equip <slot> <item>` dresses the NPC you are looking at (mainhand, offhand, head, chest, legs, feet; the item written as `/give` takes it, blank to clear). Vanilla clients see it on phantoms and bodies alike, and it survives restarts. From code: `Cast.equip(server, id, slot, item)` and `Cast.equipment(server, id)`.
