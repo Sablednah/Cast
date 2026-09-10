@@ -14,6 +14,13 @@ description='''
 ${mod_description}
 '''
 displayURL="https://sablecraft.co.uk/cast/"
+# Mod-list artwork, declared three ways because 26.2 reshaped the list and older loaders
+# ignore keys they do not know: iconFile = the small square (docs/icon-256.png),
+# bannerFile = the wide info-panel image, logoFile = what 1.21.x and 26.1 show.
+iconFile="cast-icon.png"
+bannerFile="cast.png"
+logoFile="cast.png"
+logoBlur=false
 
 # Exactly one mixin, and it is the human NPC's right-click: a phantom player
 # has no server entity, so vanilla's interact handler would drop the packet on
