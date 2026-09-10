@@ -272,6 +272,20 @@ public final class SelfTest {
                 com.sablednah.cast.BuildInfo.parse(null).commit().equals("unknown") && com.sablednah.cast.BuildInfo.describe(com.sablednah.cast.BuildInfo.parse(null)).contains("unknown"));
         check("build stamp: a malformed resource reads unknown, and does not throw",
                 com.sablednah.cast.BuildInfo.parse(new java.io.ByteArrayInputStream("\u0000garbage=\\u00zz\n=\n".getBytes(java.nio.charset.StandardCharsets.ISO_8859_1))).version().equals("unknown"));
+        // Mixed corruption in both orderings. The VALID-FIRST case is the one with teeth: those lines are
+        // already in the map when load throws, so a reader that swallows the throw and reads what landed
+        // reports a real-looking commit (LegendQuest ran that broken reader to prove which case catches it).
+        // Bad-first throws on line one with nothing populated, so it passes either way; kept for the record.
+        check("build stamp: a valid line then a bad escape degrades to unknown, all of it",
+                com.sablednah.cast.BuildInfo.parse(new java.io.ByteArrayInputStream("commit=deadbeef\nbranch=main\ntime=\\u00zz\n".getBytes(java.nio.charset.StandardCharsets.ISO_8859_1))).commit().equals("unknown"));
+        check("build stamp: a bad escape then a valid line degrades to unknown, all of it",
+                com.sablednah.cast.BuildInfo.parse(new java.io.ByteArrayInputStream("time=\\u00zz\ncommit=deadbeef\n".getBytes(java.nio.charset.StandardCharsets.ISO_8859_1))).commit().equals("unknown"));
+        check("build stamp: a stream that throws mid-read degrades to unknown", com.sablednah.cast.BuildInfo.parse(new java.io.InputStream() {
+            int n = 0;
+            @Override public int read() throws java.io.IOException { if (n++ > 12) throw new java.io.IOException("cut"); return "commit=abcd1234\n".charAt(n - 1); }
+        }).commit().equals("unknown"));
+        check("build stamp: a good stamp reads whole", com.sablednah.cast.BuildInfo.describe(com.sablednah.cast.BuildInfo.parse(new java.io.ByteArrayInputStream("commit=abcd1234\nbranch=b\ntime=t\nversion=v\n".getBytes()))).equals("v (build abcd1234 on b, t)"));
+        check("build stamp: the version carries the Minecraft line, like the filename", com.sablednah.cast.BuildInfo.version().contains("+mc"));
         check("build stamp: a dev run reads its commit (" + com.sablednah.cast.BuildInfo.describe() + ")",
                 !"unknown".equals(com.sablednah.cast.BuildInfo.commit()) && !"unknown".equals(com.sablednah.cast.BuildInfo.version()));
         CommandSourceStack source = server.createCommandSourceStack();
