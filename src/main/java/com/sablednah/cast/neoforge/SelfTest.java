@@ -267,6 +267,10 @@ public final class SelfTest {
         }
 
         check("lang catalogue", Lang.catalogueSize() > 15 && !Feedback.colored("&6x").getString().contains("§"));
+        check("build stamp: no resource at all reads unknown, and does not throw",
+                com.sablednah.cast.BuildInfo.parse(null).commit().equals("unknown") && com.sablednah.cast.BuildInfo.describe(com.sablednah.cast.BuildInfo.parse(null)).contains("unknown"));
+        check("build stamp: a malformed resource reads unknown, and does not throw",
+                com.sablednah.cast.BuildInfo.parse(new java.io.ByteArrayInputStream("\u0000garbage=\\u00zz\n=\n".getBytes(java.nio.charset.StandardCharsets.ISO_8859_1))).version().equals("unknown"));
         check("build stamp: a dev run reads its commit (" + com.sablednah.cast.BuildInfo.describe() + ")",
                 !"unknown".equals(com.sablednah.cast.BuildInfo.commit()) && !"unknown".equals(com.sablednah.cast.BuildInfo.version()));
         CommandSourceStack source = server.createCommandSourceStack();

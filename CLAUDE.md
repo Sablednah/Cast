@@ -117,7 +117,8 @@ picks by the `+mc` suffix.
 ## The build stamp
 
 Family format (agreed 2026-09-10; LegendQuest holds the reference): `build.gradle` reads the
-short commit (`-dirty` when uncommitted), branch and UTC time, writes them to the manifest
+short commit (`-dirty` when uncommitted), branch and the COMMIT's UTC time (never the wall
+clock, which would keep `jar` from ever being up to date), writes them to the manifest
 (`Build-Commit` / `Build-Branch` / `Build-Time`) and to `/cast/build.properties` (read by
 `BuildInfo`; a dev run has no jar). The startup line and `/cast status` print it. Unknown when
 absent, never a failure. Same filename, different bytes, is the trap it answers.
