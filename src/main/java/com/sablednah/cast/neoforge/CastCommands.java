@@ -167,6 +167,7 @@ public final class CastCommands {
                 "loaded", Npcs.loadedHumans(),
                 "roles", Npcs.roleIds().isEmpty() ? "none" : String.join(", ", Npcs.roleIds().stream().map(Object::toString).toList()));
         ctx.getSource().sendSuccess(() -> Feedback.colored(line), false);
+        ctx.getSource().sendSuccess(() -> Feedback.colored(Lang.fmt("msg.status.build", "build", com.sablednah.cast.BuildInfo.describe())), false);
         return 1;
     }
 

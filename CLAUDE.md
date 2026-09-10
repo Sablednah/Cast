@@ -109,6 +109,14 @@ upgraded in place), `cast.mixins.json` (`JAVA_25`) and the 26.2 drift:
 Both jars sit in `build/libs` side by side (`cast-<ver>+mc<mc>.jar`); Chronicler
 picks by the `+mc` suffix. `mc26.1` not created yet.
 
+## The build stamp
+
+Family format (agreed 2026-09-10; LegendQuest holds the reference): `build.gradle` reads the
+short commit (`-dirty` when uncommitted), branch and UTC time, writes them to the manifest
+(`Build-Commit` / `Build-Branch` / `Build-Time`) and to `/cast/build.properties` (read by
+`BuildInfo`; a dev run has no jar). The startup line and `/cast status` print it. Unknown when
+absent, never a failure. Same filename, different bytes, is the trap it answers.
+
 ## Known traps
 
 - **Every mixin, accessors included, must be LISTED in `cast.mixins.json`.**

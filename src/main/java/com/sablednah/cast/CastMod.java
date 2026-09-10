@@ -32,7 +32,7 @@ public class CastMod {
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public CastMod(IEventBus modEventBus, ModContainer modContainer) {
-        LOGGER.info("Cast initialising");
+        LOGGER.info("Cast {} initialising", BuildInfo.describe());
         modContainer.registerConfig(ModConfig.Type.COMMON, CastConfig.SPEC);
         NeoForge.EVENT_BUS.register(CastEvents.class);
         NeoForge.EVENT_BUS.register(CastPermissions.class);
