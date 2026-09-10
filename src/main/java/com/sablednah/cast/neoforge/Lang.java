@@ -55,6 +55,7 @@ public final class Lang {
         def("msg.role.unknown", "{prefix}&7Nothing has registered a role called &f{role}&7 (known: {known}). Added anyway; it will act once something does.");
         def("msg.moved", "{prefix}&7Brought &f{name}&7 here.");
         def("msg.status", "{prefix}&f{count} NPC(s), {loaded} human phantom(s) loaded, roles: {roles}");
+        def("msg.status.build", "&7Build: &f{build}");
     }
 
     public static String get(String key) {

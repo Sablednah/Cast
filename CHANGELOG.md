@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Build stamp: commit, branch and time in the manifest, `/cast/build.properties`, the startup line and `/cast status`.
 - The coyote gag (`npcs.coyote`): an NPC losing its footing looks down, looks back up, then falls.
 - Gravity: NPCs drop to the ground when the block under them goes and the anchor follows; `/cast defygravity` keeps one hanging.
 - Dressing: `/cast equip <slot> <item>` and `Cast.equip`; items kept as /give strings in the spec, built at use time, sent to viewers of a phantom and set on a body. — 0.1.0

@@ -267,6 +267,8 @@ public final class SelfTest {
         }
 
         check("lang catalogue", Lang.catalogueSize() > 15 && !Feedback.colored("&6x").getString().contains("§"));
+        check("build stamp: a dev run reads its commit (" + com.sablednah.cast.BuildInfo.describe() + ")",
+                !"unknown".equals(com.sablednah.cast.BuildInfo.commit()) && !"unknown".equals(com.sablednah.cast.BuildInfo.version()));
         CommandSourceStack source = server.createCommandSourceStack();
         command(server, source, "cast list", true);
         command(server, source, "cast status", true);
