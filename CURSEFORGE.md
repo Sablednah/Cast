@@ -17,6 +17,9 @@ creature it looks like, minus its own mind. Nothing to download, no resource pac
 
 ## Two kinds of body
 
+![A human phantom and a villager body side by side, the camp behind them](https://raw.githubusercontent.com/Sablednah/Cast/main/docs/screenshots/two-bodies.png)
+
+
 - **Human** — a player-model NPC with any real account's skin. It is a *phantom*: sent to the
   players who can see it, never added to the world. So it is not a player: it does not count
   towards sleeping, does not anchor mob spawning, does not keep chunks loaded, is not in the tab
@@ -31,6 +34,9 @@ looks down, looks back up at you, and *then* falls, landing wherever the ground 
 told it to defy gravity, which is the option's actual name.
 
 ## Dressing
+
+![A villager body in a golden helmet and an iron chestplate, holding a lantern: three /cast equip commands](https://raw.githubusercontent.com/Sablednah/Cast/main/docs/screenshots/trader-dressed.png)
+
 
 `/cast equip head minecraft:iron_helmet`, `/cast equip mainhand "minecraft:potion[potion_contents={potion:'minecraft:healing'}]"`
 — any item as `/give` takes it, in any slot, on either kind of body, remembered across restarts.
