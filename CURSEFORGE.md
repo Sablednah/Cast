@@ -13,6 +13,8 @@ creature it looks like, minus its own mind. Nothing to download, no resource pac
 
 ---
 
+![Sarge: a phantom with a helmet, chainmail and a crossbow, drawn on a vanilla client](https://raw.githubusercontent.com/Sablednah/Cast/main/docs/screenshots/sarge.png)
+
 ## Two kinds of body
 
 - **Human** — a player-model NPC with any real account's skin. It is a *phantom*: sent to the
@@ -33,6 +35,8 @@ told it to defy gravity, which is the option's actual name.
 `/cast equip head minecraft:iron_helmet`, `/cast equip mainhand "minecraft:potion[potion_contents={potion:'minecraft:healing'}]"`
 — any item as `/give` takes it, in any slot, on either kind of body, remembered across restarts.
 Blank clears the slot.
+
+![Dr Okafor in her coat with a potion, placed by Chronicler](https://raw.githubusercontent.com/Sablednah/Cast/main/docs/screenshots/okafor-dressed.png)
 
 ## For the mods that use it
 
