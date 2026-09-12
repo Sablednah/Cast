@@ -87,7 +87,7 @@ public final class CastEvents {
         // Cast 1.0.0 stood an invisible armour stand in every phantom's space as a "solid proxy". Armour
         // stands block nothing in 1.21.11 (canBeCollidedWith is Entity's default, false; LegendQuest walked
         // through one to prove it), so they are gone -- and any left in an older world are reaped on sight.
-        if (e instanceof net.minecraft.world.entity.decoration.ArmorStand && e.getTags().contains("cast_proxy")) { e.discard(); return; }
+        if (e instanceof net.minecraft.world.entity.decoration.ArmorStand && e.entityTags().contains("cast_proxy")) { e.discard(); return; }
         if (e instanceof net.minecraft.world.entity.Mob mob && e.level() instanceof net.minecraft.server.level.ServerLevel level) {
             Npcs.reown(level, mob);
         }
