@@ -52,6 +52,7 @@ public final class Npcs {
     // --- spawning ---
 
     public static UUID spawnHuman(ServerLevel level, Vec3 pos, float yaw, String name, Optional<String> skin, List<Identifier> roles) {
+        pos = Gravity.unbury(level, pos);
         NpcSpec spec = new NpcSpec(UUID.randomUUID(), NpcKind.HUMAN, name, skin, Optional.empty(),
                 level.dimension().identifier(), pos, yaw, 0F, roles, true, Optional.empty(), java.util.Map.of(), false);
         NpcStore.get(level.getServer()).put(spec);
@@ -61,6 +62,7 @@ public final class Npcs {
     }
 
     public static UUID spawnMob(ServerLevel level, Vec3 pos, float yaw, Identifier entityType, String name, List<Identifier> roles) {
+        pos = Gravity.unbury(level, pos);
         NpcSpec spec = new NpcSpec(UUID.randomUUID(), NpcKind.MOB, name, Optional.empty(), Optional.of(entityType),
                 level.dimension().identifier(), pos, yaw, 0F, roles, true, Optional.empty(), java.util.Map.of(), false);
         NpcStore.get(level.getServer()).put(spec);
@@ -78,7 +80,6 @@ public final class Npcs {
             HumanNpc human = HUMANS.remove(npcId);
             Gravity.settle(npcId);
             if (human != null && level != null) Phantoms.hideFromAll(level, human);
-            Proxies.remove(npcId);
             if (level != null) body(level, s).ifPresent(Entity::discard);
             MOBS.remove(npcId);
         });
@@ -149,7 +150,6 @@ public final class Npcs {
                 if (human != null) {
                     Phantoms.hideFromAll(level, human);
                     HUMANS.remove(spec.id());
-                    Proxies.remove(spec.id());
                     UNANCHORED.remove(spec.id());
                     NeoForge.EVENT_BUS.post(new NpcRemovedEvent(spec.id(), NpcRemovedEvent.Reason.UNLOAD));
                 }
@@ -163,9 +163,11 @@ public final class Npcs {
             boolean realising = false;
             if (!spec.defyGravity()) {
                 Vec3 landing = Gravity.landing(level, spec.pos());
-                if (landing.y < spec.pos().y) {
+                double drop = spec.pos().y - landing.y;
+                if (drop > 0.01D) {
                     final HumanNpc h = human;
-                    if (Gravity.coyote(spec.id(), () -> glance(level, h, 75F), () -> glance(level, h, -15F))) {
+                    // A real fall gets the gag; a sixteenth onto a path or a snow layer just settles.
+                    if (drop <= Gravity.SETTLE || Gravity.coyote(spec.id(), () -> glance(level, h, 75F), () -> glance(level, h, -15F))) {
                         Vec3 from = human.position();
                         human.snapTo(landing.x, landing.y, landing.z, human.getYRot(), 0F);
                         spec = spec.withPose(spec.dimension(), landing, spec.yaw(), spec.pitch());
@@ -178,7 +180,6 @@ public final class Npcs {
                     Gravity.settle(spec.id());
                 }
             }
-            Proxies.ensure(level, human, spec);
             if (spec.lookAtPlayers() && !realising) look(level, human, spec);
             Phantoms.update(level, human, spec);
         } else {
@@ -519,7 +520,6 @@ public final class Npcs {
         MOBS.clear();
         Gravity.clear();
         UNANCHORED.clear();
-        Proxies.clear();
         Phantoms.clear();
         ROLES_OFF.clear();
     }

@@ -84,7 +84,10 @@ public final class CastEvents {
     static void onJoin(net.neoforged.neoforge.event.entity.EntityJoinLevelEvent event) {
         if (event.getLevel().isClientSide()) return;
         Entity e = event.getEntity();
-        if (com.sablednah.cast.npc.Proxies.isOrphan(e)) { e.discard(); return; }
+        // Cast 1.0.0 stood an invisible armour stand in every phantom's space as a "solid proxy". Armour
+        // stands block nothing in 1.21.11 (canBeCollidedWith is Entity's default, false; LegendQuest walked
+        // through one to prove it), so they are gone -- and any left in an older world are reaped on sight.
+        if (e instanceof net.minecraft.world.entity.decoration.ArmorStand && e.getTags().contains("cast_proxy")) { e.discard(); return; }
         if (e instanceof net.minecraft.world.entity.Mob mob && e.level() instanceof net.minecraft.server.level.ServerLevel level) {
             Npcs.reown(level, mob);
         }
