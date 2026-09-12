@@ -103,8 +103,9 @@ public final class Bodies {
         mob.setNoGravity(true);
         if (!spec.defyGravity()) {
             net.minecraft.world.phys.Vec3 landing = Gravity.landing(mob.level() instanceof net.minecraft.server.level.ServerLevel sl ? sl : null, spec.pos());
-            if (landing.y < spec.pos().y) {
-                if (Gravity.coyote(spec.id(),
+            double drop = spec.pos().y - landing.y;
+            if (drop > 0.01D) {
+                if (drop <= Gravity.SETTLE || Gravity.coyote(spec.id(),
                         () -> mob.getLookControl().setLookAt(mob.getX(), mob.getY() - 3, mob.getZ()),
                         () -> mob.getLookControl().setLookAt(mob.getX(), mob.getEyeY() + 2, mob.getZ()))) {
                     mob.snapTo(landing.x, landing.y, landing.z, mob.getYRot(), 0F);

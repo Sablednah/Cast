@@ -98,12 +98,7 @@ public final class SelfTest {
             Npcs.setSkin(server, human, Optional.of("selftestskin"));
             check("cached skin lands on the phantom profile", Cast.byId(server, human).flatMap(Npc::entity)
                     .map(e -> ((HumanNpc) e).getGameProfile().properties().containsKey("textures")).orElse(false));
-            var proxy = com.sablednah.cast.npc.Proxies.of(human);
-            var proxyEntity = proxy.orElse(null);
             Npcs.tick(server);
-            check("a second tick does not make a second proxy", proxyEntity != null && com.sablednah.cast.npc.Proxies.of(human).orElse(null) == proxyEntity);
-            check("phantom has a solid proxy standing in its space", proxy
-                    .map(p -> p.distanceToSqr(here) < 0.01 && p.isInvisible() && p.isInvulnerable()).orElse(false));
             check("human is not listed", h.flatMap(Npc::entity).map(e -> !((HumanNpc) e).allowsListing()).orElse(false));
 
             Optional<Npc> v = Cast.byId(server, villager);
@@ -122,7 +117,7 @@ public final class SelfTest {
             Vec3 home = zb.position();
             zb.snapTo(home.x + 3, home.y, home.z, 0F, 0F);
             Npcs.tick(server);
-            check("anchored body snaps home after a shove", zb.distanceToSqr(home) < 0.01);
+            check("anchored body snaps home after a shove (home " + home + ", now " + zb.position() + ", spec " + Cast.byId(server, zombie).map(Npc::pos).orElse(null) + ", here " + here + ")", zb.distanceToSqr(home) < 0.01);
             Cast.setAnchored(server, zombie, false);
             zb.snapTo(home.x + 3, home.y, home.z, 0F, 0F);
             Npcs.tick(server);
@@ -183,7 +178,7 @@ public final class SelfTest {
             check("a mob with no roles handles nothing", !Npcs.interact(viewer, villager, InteractionHand.MAIN_HAND));
 
             // --- lookups and drive ---
-            check("npcAt finds the phantom in front of the viewer", Cast.npcAt(viewer, 6).map(n -> n.id().equals(human)).orElse(false));
+            check("npcAt finds the phantom in front of the viewer (human at " + Cast.byId(server, human).map(Npc::pos).orElse(null) + ", viewer " + viewer.position() + ", block under here " + level.getBlockState(net.minecraft.core.BlockPos.containing(here).below()) + ")", Cast.npcAt(viewer, 6).map(n -> n.id().equals(human)).orElse(false));
             check("npcHitAt reports a distance under 4", Cast.npcHitAt(viewer, 6).map(hit -> hit.distance() > 1 && hit.distance() < 4).orElse(false));
             check("human handle can be possessed while loaded", h.map(Npc::canPossess).orElse(false));
             check("phantom.level() is the real level", h.flatMap(Npc::entity).map(e -> e.level() == level).orElse(false));
@@ -212,6 +207,21 @@ public final class SelfTest {
             check("drive moves the spec", Cast.byId(server, human).map(n -> n.pos().z > here.z + 2).orElse(false));
             check("say with nobody near returns 0", Cast.say(server, human, "hello?", 8.0) == 0);
             check("rename lands", Cast.byId(server, human).map(n -> n.name().equals("Renamed Again")).orElse(false));
+            // Placement: a spawn handed the ground block's own Y is raised out of it; a slab is sat on, not hovered over.
+            {
+                var solid = net.minecraft.core.BlockPos.containing(here.x + 4, here.y - 1, here.z);
+                level.setBlockAndUpdate(solid, net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
+                UUID buried = Cast.spawnMob(level, new Vec3(here.x + 4.5, here.y - 1, here.z + 0.5), 0F, Identifier.parse("minecraft:pig"), "Buried", List.of());
+                check("placement: a body handed a Y inside the ground is raised onto it",
+                        Cast.byId(server, buried).map(n -> n.pos().y >= here.y - 0.01).orElse(false));
+                Cast.remove(server, buried);
+                var slabAt = net.minecraft.core.BlockPos.containing(here.x - 4, here.y, here.z);
+                level.setBlockAndUpdate(slabAt.below(), net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
+                level.setBlockAndUpdate(slabAt, net.minecraft.world.level.block.Blocks.STONE_SLAB.defaultBlockState());
+                Vec3 onSlab = com.sablednah.cast.npc.Gravity.landing(level, new Vec3(slabAt.getX() + 0.5, slabAt.getY() + 1, slabAt.getZ() + 0.5));
+                check("placement: feet land on a slab's top, not the block above it (" + onSlab.y + ")", Math.abs(onSlab.y - (slabAt.getY() + 0.5)) < 0.01);
+                level.setBlockAndUpdate(slabAt, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+            }
             // Gravity: a phantom over air drops to the ground and its anchor follows; defying it, it hangs.
             {
                 Vec3 gBefore = Cast.byId(server, human).map(Npc::pos).orElse(here);
@@ -257,7 +267,6 @@ public final class SelfTest {
             Cast.remove(server, zombie);
             check("store back to where it was", store.size() == before);
             Npcs.tick(server);
-            check("proxy gone with its phantom", com.sablednah.cast.npc.Proxies.of(human).isEmpty());
             for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) level.setChunkForced(cx + dx, cz + dz, false);
         }
 

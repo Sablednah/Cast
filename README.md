@@ -34,8 +34,8 @@ on all three Minecraft lines.
   world. Not a player: does not count towards sleeping, does not anchor mob
   spawning, does not keep chunks loaded, not in the tab list, not in `/tp`
   suggestions (the player-info entry that carries the skin is withdrawn
-  `npcs.tabEntrySeconds` after it appears). An invisible armour-stand proxy
-  gives it a body so mobs walk round it.
+  `npcs.tabEntrySeconds` after it appears). Nothing stands in its
+  space: an armour-stand proxy used to, until it was measured to block nothing.
 - **Mob** -- any vanilla creature, owned by Cast from spawn. Goals cleared and
   replaced with look-at-player; brain-driven mobs (villagers and friends) have
   their behaviours removed every second, which is the only way to park them.
