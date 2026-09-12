@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Bodies land on a block's shape (a slab, a snow layer, a path), not on the block above it; a drop under 0.6 settles silently, only a real fall gets the gag.
+- A spawn handed a Y inside the ground is raised out of it before it is stored, so nothing is ever buried and a possessor is never shoved sideways.
+- The invisible armour-stand proxy is gone: armour stands block nothing in 1.21.11 (measured by the LegendQuest session), so it was an entity per phantom for no effect. Old proxies are reaped on sight.
+
 ## 1.0.0 — 2026-09-12
 
 The first release. Everything below is in it.

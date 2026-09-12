@@ -23,8 +23,7 @@ creature it looks like, minus its own mind. Nothing to download, no resource pac
 - **Human** — a player-model NPC with any real account's skin. It is a *phantom*: sent to the
   players who can see it, never added to the world. So it is not a player: it does not count
   towards sleeping, does not anchor mob spawning, does not keep chunks loaded, is not in the tab
-  list, and does not turn up in `/tp` suggestions. An invisible stand-in gives it a body, so mobs
-  walk round it rather than through it.
+  list, and does not turn up in `/tp` suggestions.
 - **Mob** — any vanilla creature. Its goals are cleared and replaced with "look at whoever is near";
   the brain-driven ones (villagers, piglins, the rest) have their behaviours removed every second,
   which is the only way to park them. It is invulnerable, named, and never opens its own screen.
