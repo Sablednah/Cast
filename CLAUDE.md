@@ -137,6 +137,15 @@ Never handle the tokens. `CURSEFORGE.md` is the store page; `docs/` holds the ar
 
 ## Known traps
 
+- **"Stuck until I jump" means a player is inside terrain, never that something holds them**
+  (LegendQuest measured it: feet a tenth below a surface sink a whole block and move 0.2 in
+  two seconds of W -- "a 1x1 pit on the surface"). Cast's answer is `Gravity.unbury` on every
+  spawn: feet inside a block are raised before the position is stored. Feet only -- testing the
+  whole height lifted the self-test camp into a tree canopy.
+- **Armour stands block nothing in 1.21.11.** `canBeCollidedWith` is `Entity`'s default (false)
+  and `ArmorStand` never overrides it; only Shulker, HappyGhast and boats are ever solid to another
+  entity. The "solid proxy" Cast 1.0.0 stood in every phantom's space did nothing and is gone.
+
 - **Every mixin, accessors included, must be LISTED in `cast.mixins.json`.**
   An accessor that merely sits in the package throws
   `IllegalClassLoadError` the first time anything references it -- for
