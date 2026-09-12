@@ -123,6 +123,18 @@ clock, which would keep `jar` from ever being up to date), writes them to the ma
 `BuildInfo`; a dev run has no jar). The startup line and `/cast status` print it. Unknown when
 absent, never a failure. Same filename, different bytes, is the trap it answers.
 
+## Releasing
+
+`mod_version` in `gradle.properties` (the same on every branch), `CHANGELOG.md` with a dated
+heading, the README status line, then commit main, cherry-pick the version commit to `mc26.1`
+and `mc26.2`, build a jar per branch with the right JDK, tag `v<version>` on main, and
+`gh release create` with all three jars attached. Publishing the GitHub release fires
+`.github/workflows/curseforge.yml` and `modrinth.yml`; both upload every attached jar with the
+Minecraft version read from the `+mc` filename tag, and both skip cleanly until
+`CURSEFORGE_TOKEN` / `CURSEFORGE_PROJECT_ID` / `MODRINTH_TOKEN` / `MODRINTH_PROJECT_ID` exist.
+Never handle the tokens. `CURSEFORGE.md` is the store page; `docs/` holds the artwork
+(`icon-256.png` for Modrinth's 256 KiB cap) and screenshots. 1.0.0 shipped 2026-09-12.
+
 ## Known traps
 
 - **Every mixin, accessors included, must be LISTED in `cast.mixins.json`.**

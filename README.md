@@ -12,9 +12,10 @@ uses it for quest givers; [LegendQuest StoryTeller](https://github.com/Sablednah
 possesses them for live scenes. Server-side only; vanilla clients see
 everything. The store page is [CURSEFORGE.md](CURSEFORGE.md).
 
-**Status: 0.1.0, heading for a first release.** Play-tested on a vanilla-protocol
-client: humans with real skins, villager and cow bodies, possession, dressing,
-gravity, the lot. Self-tested headlessly (94 checks).
+**Status: 1.0.0.** Play-tested on a vanilla-protocol client: humans with real
+skins, villager and cow bodies, possession, dressing, gravity, the lot; driven
+end to end on a second machine by keystroke. Self-tested headlessly (94 checks)
+on all three Minecraft lines.
 
 ## Two kinds of body
 
