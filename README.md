@@ -16,10 +16,47 @@ Depends on nothing. [Chronicler](https://github.com/Sablednah/Chronicler)
 uses it for quest givers; [LegendQuest StoryTeller](https://github.com/Sablednah/LegendQuest-StoryTeller)
 uses it for its cast. Server-side only; vanilla clients see everything.
 
+<<<<<<< HEAD
 **Status: 0.1.0 (unreleased).** Built 2026-09-07 and play-tested the same
 day: a human with a real skin renders on a vanilla-protocol client and turns
 to follow you; villager and cow bodies stand and look. StoryTeller possesses
 both kinds.
+=======
+**Status: 1.0.0.** Play-tested on a vanilla-protocol client: humans with real
+skins, villager and cow bodies, possession, dressing, gravity, the lot; driven
+end to end on a second machine by keystroke. Self-tested headlessly (94 checks)
+on all three Minecraft lines.
+
+## Two kinds of body
+
+- **Human** -- a player-model NPC with a real account's skin. A *phantom*:
+  rendered purely by packets to the players who can see it, never added to the
+  world. Not a player: does not count towards sleeping, does not anchor mob
+  spawning, does not keep chunks loaded, not in the tab list, not in `/tp`
+  suggestions (the player-info entry that carries the skin is withdrawn
+  `npcs.tabEntrySeconds` after it appears). An invisible armour-stand proxy
+  gives it a body so mobs walk round it.
+- **Mob** -- any vanilla creature, owned by Cast from spawn. Goals cleared and
+  replaced with look-at-player; brain-driven mobs (villagers and friends) have
+  their behaviours removed every second, which is the only way to park them.
+  Invulnerable, named, never opens its own screen.
+
+## Anchoring and gravity
+
+Both kinds stand where placed: a shove is undone within a second. Possession
+(StoryTeller) suspends the anchor and re-anchors wherever the body is let go;
+a body released mid-air falls first and its landing becomes home. Mine the
+block from under one and it looks down, looks back up at you, then falls
+(`npcs.coyote`, two seconds of dawning realisation). `/cast defygravity true`
+keeps one exactly where it was put with nothing underneath.
+
+## Dressing
+
+`/cast equip <slot> <item>` -- mainhand, offhand, head, chest, legs, feet; the
+item written as `/give` takes it (`minecraft:leather_chestplate[dyed_color=16777215]`);
+blank clears. Sent to phantom viewers, set on bodies, remembered across
+restarts. A wrong slot or item is refused with the NPC named and the reason.
+>>>>>>> 307a345 (Cast 1.0.0)
 
 ## Commands (`cast.admin` or op level 2)
 
