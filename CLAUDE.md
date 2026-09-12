@@ -137,6 +137,11 @@ Never handle the tokens. `CURSEFORGE.md` is the store page; `docs/` holds the ar
 
 ## Known traps
 
+- **Resolving a cherry-pick conflict with `git add -A` resurrects files the commit deleted.**
+  The docs-only CLAUDE.md conflict on a version branch was resolved that way and `Proxies.java`,
+  deleted on main, came back on both 26.x branches as an orphan nothing called. After
+  `cherry-pick --continue`, `git grep` for the name of the thing the commit removed.
+
 - **"Stuck until I jump" means a player is inside terrain, never that something holds them**
   (LegendQuest measured it: feet a tenth below a surface sink a whole block and move 0.2 in
   two seconds of W -- "a 1x1 pit on the surface"). Cast's answer is `Gravity.unbury` on every
