@@ -33,8 +33,11 @@ echo ">> Building (JAVA_HOME=$JAVA_HOME)..."
 # The jar for the Minecraft version this checkout builds, never "the newest": three lines share
 # build/libs, and the newest file is whichever branch was built last, not the one checked out.
 MC_BUILD="$(sed -n 's/^minecraft_version=//p' "$ROOT/gradle.properties" | tr -d '\r')"
-JAR="$(ls "$ROOT"/build/libs/cast-*+mc"$MC_BUILD".jar 2>/dev/null | grep -v -- '-sources' | head -1 || true)"
-[ -n "$JAR" ] || { echo "!! No built jar in build/libs" >&2; exit 1; }
+# The exact jar, never a glob: a glob with head -1 sorts alphabetically, and Chronicler's deployed a
+# stale 0.1.0 over a freshly built 1.0.0 that way.
+MOD_VERSION="$(sed -n 's/^mod_version=//p' "$ROOT/gradle.properties" | tr -d '\r')"
+JAR="$ROOT/build/libs/cast-${MOD_VERSION}+mc${MC_BUILD}.jar"
+[ -f "$JAR" ] || { echo "!! No $(basename "$JAR") in build/libs" >&2; exit 1; }
 JARNAME="$(basename "$JAR")"
 
 MC_TAG=""
@@ -61,14 +64,15 @@ else
     done
 fi
 
-# REFUSE if an instance is running. The name runs up to the next backslash or quote, NOT the
+# REFUSE if an instance is running. The name runs up to the next backslash, quote or " --" (the
+# launcher passes --gameDir unquoted, so "26.2 --assetsDir C:" was captured and nothing refused), NOT the
 # next space: instance folders have spaces in them ("MobHealth - Forge"), and a guard that
 # stops at the space compares "MobHealth" and never refuses anything. Windows does NOT lock the jar, so the copy
 # silently succeeds and the live JVM dies the moment it lazily loads a class it
 # had not touched (NoClassDefFoundError <- ZipException: invalid LOC header).
 RUNNING="$(powershell.exe -NoProfile -Command \
   "Get-CimInstance Win32_Process | Where-Object { \$_.Name -like 'java*' } | ForEach-Object { \
-   \$m=[regex]::Match(\$_.CommandLine,'Instances\\\\([^\\\\\"]+)'); if (\$m.Success) { \$m.Groups[1].Value } }" \
+   \$m=[regex]::Match(\$_.CommandLine,'Instances\\\\([^\\\\\"]+?)(?= --|\\\\|\"|$)'); if (\$m.Success) { \$m.Groups[1].Value } }" \
   2>/dev/null | tr -d '\r' | sort -u || true)"
 
 for INSTANCE in "${TARGETS[@]}"; do
