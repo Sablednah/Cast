@@ -23,7 +23,9 @@ ERROR lines not counts).
 ```bash
 ./gradlew compileJava              # ~20s; the FIRST build after touching accesstransformer.cfg is 10+ min
 ./gradlew runServer -Pselftest     # neoforge/SelfTest on ServerStartedEvent; read "Cast SelfTest:" and every FAILED:
-./deploy.sh                        # -> the CurseForge instance for this line
+./deploy.sh                        # -> every CurseForge instance on this line that has Cast; the EXACT
+                                   #    versioned jar (a glob picked 0.1.0 over 1.0.0 next door); refuses a
+                                   #    running instance (the guard now stops at " --": --gameDir is unquoted)
 ```
 
 Run self-test boots in the FOREGROUND of one command (the harness's memory
