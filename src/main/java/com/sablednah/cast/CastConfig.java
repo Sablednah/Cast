@@ -16,6 +16,7 @@ public final class CastConfig {
     public static final ModConfigSpec.DoubleValue RUSH_SPEED;
     public static final ModConfigSpec.DoubleValue FOLLOW_TELEPORT;
     public static final ModConfigSpec.DoubleValue LURK_GROWL_CHANCE;
+    public static final ModConfigSpec.DoubleValue LURE_RADIUS;
 
     static {
         BUILDER.comment("NPCs").push("npcs");
@@ -52,6 +53,10 @@ public final class CastConfig {
         LURK_GROWL_CHANCE = BUILDER
                 .comment("Each second someone is near, the chance a hiding lurker groans.")
                 .defineInRange("lurkGrowlChance", 0.3D, 0.0D, 1.0D);
+        LURE_RADIUS = BUILDER
+                .comment("An exposed NPC (an escort another mod has made worth attacking) draws monsters within this",
+                        "many blocks. Not exposed, nothing hunts an NPC.")
+                .defineInRange("lureRadius", 16.0D, 2.0D, 64.0D);
         BUILDER.pop();
 
         BUILDER.comment("Skins").push("skins");

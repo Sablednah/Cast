@@ -157,6 +157,21 @@ public final class Cast {
         Npcs.setDefyGravity(server, npcId, defy);
     }
 
+    // --- being attacked ---
+
+    /**
+     * Make the NPC worth attacking for {@code leaseTicks}: monsters within {@code motion.lureRadius} are
+     * set on it once a second, and every blow is an {@link NpcHitEvent}. It still takes no damage. Renew
+     * to keep it up; when it lapses the monsters are called off. False when the NPC does not exist.
+     */
+    public static boolean expose(MinecraftServer server, UUID npcId, int leaseTicks) {
+        return com.sablednah.cast.npc.Exposure.expose(server, npcId, leaseTicks);
+    }
+
+    public static boolean isExposed(UUID npcId) {
+        return com.sablednah.cast.npc.Exposure.isExposed(npcId);
+    }
+
     // --- moving ---
 
     /**
