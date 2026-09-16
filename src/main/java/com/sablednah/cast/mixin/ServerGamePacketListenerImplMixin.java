@@ -25,8 +25,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  *
  * <p>26.1 and 26.2: the packet is a record carrying hand and location together (one
  * packet per click, not interact-at then interact), and attacks moved to
- * {@code ServerboundAttackPacket}, which needs no help -- a hit on nothing
- * does nothing. Only the main hand counts.</p>
+ * {@code ServerboundAttackPacket}; one on a phantom is reported as a hit. Only the main hand counts.</p>
  */
 @Mixin(ServerGamePacketListenerImpl.class)
 public abstract class ServerGamePacketListenerImplMixin {
@@ -39,6 +38,16 @@ public abstract class ServerGamePacketListenerImplMixin {
         var human = Npcs.humanByEntityId(packet.entityId());
         if (human.isEmpty()) return;
         if (packet.hand() == InteractionHand.MAIN_HAND) Npcs.interact(player, human.get().npcId, packet.hand());
+        ci.cancel();
+    }
+
+    /** A punch on a phantom: vanilla finds no entity and drops it, so it is reported as a hit here. */
+    @Inject(method = "handleAttack", at = @At("HEAD"), cancellable = true)
+    private void cast$handleAttack(net.minecraft.network.protocol.game.ServerboundAttackPacket packet, CallbackInfo ci) {
+        if (player == null || !player.level().getServer().isSameThread()) return;
+        var human = Npcs.humanByEntityId(packet.entityId());
+        if (human.isEmpty()) return;
+        com.sablednah.cast.npc.Exposure.hit(human.get(), java.util.Optional.of(player));
         ci.cancel();
     }
 }

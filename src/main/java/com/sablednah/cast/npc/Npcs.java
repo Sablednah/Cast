@@ -86,6 +86,7 @@ public final class Npcs {
         BROKEN.remove(npcId);
         UNANCHORED.remove(npcId);
         Motion.forget(npcId);
+        Exposure.forget(npcId);
         if (had) NeoForge.EVENT_BUS.post(new NpcRemovedEvent(npcId, NpcRemovedEvent.Reason.REMOVED));
         return had;
     }
@@ -554,6 +555,7 @@ public final class Npcs {
         Gravity.clear();
         UNANCHORED.clear();
         Motion.clear();
+        Exposure.clear();
         Phantoms.clear();
         ROLES_OFF.clear();
     }
