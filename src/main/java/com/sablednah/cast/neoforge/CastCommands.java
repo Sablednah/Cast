@@ -63,6 +63,18 @@ public final class CastCommands {
                                 .suggests((c, b) -> net.minecraft.commands.SharedSuggestionProvider.suggest(List.of("mainhand", "offhand", "head", "chest", "legs", "feet"), b))
                                 .executes(ctx -> equip(ctx, null))
                                 .then(Commands.argument("item", StringArgumentType.greedyString()).executes(ctx -> equip(ctx, StringArgumentType.getString(ctx, "item"))))))
+                .then(Commands.literal("follow")
+                        .executes(CastCommands::followMe)
+                        .then(Commands.literal("stop").executes(CastCommands::followStop)))
+                .then(Commands.literal("lurk")
+                        .then(Commands.literal("door")
+                                .executes(ctx -> lurkDoor(ctx, null))
+                                .then(Commands.argument("pos", net.minecraft.commands.arguments.coordinates.Vec3Argument.vec3())
+                                        .executes(ctx -> lurkDoor(ctx, net.minecraft.commands.arguments.coordinates.Vec3Argument.getVec3(ctx, "pos")))))
+                        .then(Commands.literal("radius").then(Commands.argument("blocks", com.mojang.brigadier.arguments.DoubleArgumentType.doubleArg(1, 64)).executes(CastCommands::lurkRadius)))
+                        .then(Commands.literal("every").then(Commands.argument("seconds", com.mojang.brigadier.arguments.IntegerArgumentType.integer(2, 3600)).executes(CastCommands::lurkEvery)))
+                        .then(Commands.literal("scare").executes(CastCommands::lurkScare))
+                        .then(Commands.literal("off").executes(CastCommands::lurkOff)))
                 .then(Commands.literal("role")
                         .then(Commands.literal("add").then(Commands.argument("role", IdentifierArgument.id()).executes(ctx -> role(ctx, true))))
                         .then(Commands.literal("remove").then(Commands.argument("role", IdentifierArgument.id()).executes(ctx -> role(ctx, false))))));
@@ -262,6 +274,88 @@ public final class CastCommands {
         }
         Cast.setRoles(player.level().getServer(), t.get().id(), roles);
         return 1;
+    }
+
+    // --- moving ---
+
+    private static final int COMMAND_LEASE = 20 * 60 * 5;
+
+    private static int followMe(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
+        Optional<Npc> t = targetOrSay(player);
+        if (t.isEmpty()) return 0;
+        Cast.follow(player.level().getServer(), t.get().id(), player, COMMAND_LEASE);
+        Feedback.chat(player, Lang.fmt("msg.follow", "name", t.get().name()));
+        return 1;
+    }
+
+    private static int followStop(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
+        Optional<Npc> t = targetOrSay(player);
+        if (t.isEmpty()) return 0;
+        Cast.stopFollowing(player.level().getServer(), t.get().id());
+        Feedback.chat(player, Lang.fmt("msg.follow.stop", "name", t.get().name()));
+        return 1;
+    }
+
+    /** The NPC hides where it stands now; the door is where you stand (or the position given). */
+    private static int lurkDoor(CommandContext<CommandSourceStack> ctx, Vec3 pos) throws CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
+        Optional<Npc> t = targetOrSay(player);
+        if (t.isEmpty()) return 0;
+        var server = player.level().getServer();
+        Vec3 door = pos != null ? pos : player.position();
+        var old = com.sablednah.cast.core.NpcStore.get(server).get(t.get().id()).flatMap(com.sablednah.cast.core.NpcSpec::lurk);
+        Vec3 home = t.get().pos();
+        Npcs.setLurk(server, t.get().id(), Optional.of(new com.sablednah.cast.core.LurkSpec(home, door,
+                old.map(com.sablednah.cast.core.LurkSpec::radius).orElse(8.0D), old.map(com.sablednah.cast.core.LurkSpec::every).orElse(20),
+                old.flatMap(com.sablednah.cast.core.LurkSpec::growl), old.flatMap(com.sablednah.cast.core.LurkSpec::thump))));
+        Feedback.chat(player, Lang.fmt("msg.lurk.set", "name", t.get().name(),
+                "hx", fmt(home.x), "hy", fmt(home.y), "hz", fmt(home.z), "dx", fmt(door.x), "dy", fmt(door.y), "dz", fmt(door.z),
+                "radius", fmt(old.map(com.sablednah.cast.core.LurkSpec::radius).orElse(8.0D)), "every", old.map(com.sablednah.cast.core.LurkSpec::every).orElse(20)));
+        return 1;
+    }
+
+    private static int lurkRadius(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        return lurkEdit(ctx, l -> l.withRadius(com.mojang.brigadier.arguments.DoubleArgumentType.getDouble(ctx, "blocks")));
+    }
+
+    private static int lurkEvery(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        return lurkEdit(ctx, l -> l.withEvery(com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "seconds")));
+    }
+
+    private static int lurkEdit(CommandContext<CommandSourceStack> ctx, java.util.function.UnaryOperator<com.sablednah.cast.core.LurkSpec> edit) throws CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
+        Optional<Npc> t = targetOrSay(player);
+        if (t.isEmpty()) return 0;
+        var server = player.level().getServer();
+        var lurk = com.sablednah.cast.core.NpcStore.get(server).get(t.get().id()).flatMap(com.sablednah.cast.core.NpcSpec::lurk);
+        if (lurk.isEmpty()) { Feedback.chat(player, Lang.fmt("msg.lurk.none", "name", t.get().name())); return 0; }
+        var next = edit.apply(lurk.get());
+        Npcs.setLurk(server, t.get().id(), Optional.of(next));
+        Feedback.chat(player, Lang.fmt("msg.lurk.edited", "name", t.get().name(), "radius", fmt(next.radius()), "every", next.every()));
+        return 1;
+    }
+
+    private static int lurkScare(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
+        Optional<Npc> t = targetOrSay(player);
+        if (t.isEmpty()) return 0;
+        if (!Cast.scare(player.level().getServer(), t.get().id())) { Feedback.chat(player, Lang.fmt("msg.lurk.none", "name", t.get().name())); return 0; }
+        return 1;
+    }
+
+    private static int lurkOff(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
+        Optional<Npc> t = targetOrSay(player);
+        if (t.isEmpty()) return 0;
+        Cast.clearLurk(player.level().getServer(), t.get().id());
+        Feedback.chat(player, Lang.fmt("msg.lurk.off", "name", t.get().name()));
+        return 1;
+    }
+
+    private static String fmt(double v) {
+        return String.format(java.util.Locale.ROOT, "%.1f", v);
     }
 
     private CastCommands() {}

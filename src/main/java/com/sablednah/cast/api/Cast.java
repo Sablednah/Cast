@@ -157,6 +157,59 @@ public final class Cast {
         Npcs.setDefyGravity(server, npcId, defy);
     }
 
+    // --- moving ---
+
+    /**
+     * Follow a player on foot, walking the trail they actually walked, for {@code leaseTicks}.
+     * Call again to renew; when the renewals stop the NPC stops and is anchored where it stands,
+     * so a follow can never outlive whatever asked for it (a restart included). A new leader
+     * starts a fresh trail. False when the NPC does not exist.
+     */
+    public static boolean follow(MinecraftServer server, UUID npcId, ServerPlayer leader, int leaseTicks) {
+        return com.sablednah.cast.npc.Motion.follow(server, npcId, leader, leaseTicks);
+    }
+
+    public static void stopFollowing(MinecraftServer server, UUID npcId) {
+        com.sablednah.cast.npc.Motion.stopFollowing(server, npcId);
+    }
+
+    /** Who the NPC is following, if anyone. */
+    public static Optional<UUID> leaderOf(UUID npcId) {
+        return com.sablednah.cast.npc.Motion.leaderOf(npcId);
+    }
+
+    /**
+     * Walk to a point and stand there, anchored. A human walks a straight line hugging the
+     * ground; a mob body uses its own navigation. Either one that cannot get there within a
+     * minute is put there. False when the NPC does not exist.
+     */
+    public static boolean walkTo(MinecraftServer server, UUID npcId, Vec3 target) {
+        return com.sablednah.cast.npc.Motion.walkTo(server, npcId, target);
+    }
+
+    /** Following or walking right now. */
+    public static boolean isMoving(UUID npcId) {
+        return com.sablednah.cast.npc.Motion.isMoving(npcId);
+    }
+
+    /**
+     * Make the NPC a lurker, saved with it: it keeps to {@code home}, groans when a player is
+     * within {@code radius}, and roughly every {@code everySeconds} while one is, rushes to
+     * {@code door}, hammers on it and slinks back. The caged zombie in the basement.
+     */
+    public static void setLurk(MinecraftServer server, UUID npcId, Vec3 home, Vec3 door, double radius, int everySeconds) {
+        Npcs.setLurk(server, npcId, Optional.of(new com.sablednah.cast.core.LurkSpec(home, door, radius, everySeconds, Optional.empty(), Optional.empty())));
+    }
+
+    public static void clearLurk(MinecraftServer server, UUID npcId) {
+        Npcs.setLurk(server, npcId, Optional.empty());
+    }
+
+    /** Rush the door now, if it lurks. */
+    public static boolean scare(MinecraftServer server, UUID npcId) {
+        return com.sablednah.cast.npc.Motion.scare(server, npcId);
+    }
+
     public static void rename(MinecraftServer server, UUID npcId, String name) {
         Npcs.rename(server, npcId, name);
     }

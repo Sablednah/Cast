@@ -12,6 +12,10 @@ public final class CastConfig {
     public static final ModConfigSpec.BooleanValue COYOTE;
     public static final ModConfigSpec.IntValue TAB_ENTRY_SECONDS;
     public static final ModConfigSpec.BooleanValue FETCH_SKINS;
+    public static final ModConfigSpec.DoubleValue WALK_SPEED;
+    public static final ModConfigSpec.DoubleValue RUSH_SPEED;
+    public static final ModConfigSpec.DoubleValue FOLLOW_TELEPORT;
+    public static final ModConfigSpec.DoubleValue LURK_GROWL_CHANCE;
 
     static {
         BUILDER.comment("NPCs").push("npcs");
@@ -31,6 +35,23 @@ public final class CastConfig {
                         "puts its name in command suggestions (/tp, @-selectors). It is withdrawn this many seconds",
                         "after the phantom appears, once the client has the skin. 0 keeps it forever.")
                 .defineInRange("tabEntrySeconds", 2, 0, 60);
+        BUILDER.pop();
+
+        BUILDER.comment("Moving NPCs: following, walking, lurking").push("motion");
+        WALK_SPEED = BUILDER
+                .comment("How far (blocks per tick) a human NPC walks. A player walks about 0.22 and sprints about 0.28.",
+                        "A follower that has fallen well behind goes 1.6 times this until it catches up.")
+                .defineInRange("walkSpeed", 0.22D, 0.02D, 1.0D);
+        RUSH_SPEED = BUILDER
+                .comment("How fast (blocks per tick) a human lurker rushes the door. Mob bodies rush on their own legs.")
+                .defineInRange("rushSpeed", 0.45D, 0.05D, 2.0D);
+        FOLLOW_TELEPORT = BUILDER
+                .comment("A follower further than this (blocks) behind its leader appears a few steps back along the",
+                        "trail, as a tamed wolf does. 0 never teleports: it walks the whole way, however long.")
+                .defineInRange("followTeleport", 48.0D, 0.0D, 512.0D);
+        LURK_GROWL_CHANCE = BUILDER
+                .comment("Each second someone is near, the chance a hiding lurker groans.")
+                .defineInRange("lurkGrowlChance", 0.3D, 0.0D, 1.0D);
         BUILDER.pop();
 
         BUILDER.comment("Skins").push("skins");

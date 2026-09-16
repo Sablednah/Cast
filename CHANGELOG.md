@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased
+## Unreleased (1.1.0)
+
+- **Following**: `Cast.follow(server, npc, leader, leaseTicks)` walks the trail the leader walked, stops short, catches up, and lets go when the lease is not renewed. `/cast follow`, `/cast follow stop`. For Chronicler's escort quests.
+- **Walking**: `Cast.walkTo` goes to a point on foot and stands there, anchored.
+- **Lurking**: `/cast lurk door` and `Cast.setLurk` -- the caged zombie. Hides at the back, groans when someone is near, now and then rushes the door, hammers on it and slinks back. Saved with the NPC.
+- Config `motion.walkSpeed`, `motion.rushSpeed`, `motion.followTeleport`, `motion.lurkGrowlChance`.
 
 - Bodies land on a block's shape (a slab, a snow layer, a path), not on the block above it; a drop under 0.6 settles silently, only a real fall gets the gag.
 - A spawn handed a Y inside the ground is raised out of it before it is stored, so nothing is ever buried and a possessor is never shoved sideways.
