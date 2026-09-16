@@ -56,6 +56,16 @@ public final class HumanNpc extends FakePlayer {
         return npc;
     }
 
+    /**
+     * A phantom takes no damage, but a monster set on it swings, and the swing arrives here
+     * directly (a mob's attack calls this, not the level). Reported, never applied.
+     */
+    @Override
+    public boolean hurtServer(net.minecraft.server.level.ServerLevel level, net.minecraft.world.damagesource.DamageSource source, float amount) {
+        Exposure.hit(this, java.util.Optional.ofNullable(source.getEntity() != null ? source.getEntity() : source.getDirectEntity()));
+        return false;
+    }
+
     /** Never in the tab list. */
     @Override
     public boolean allowsListing() {

@@ -319,6 +319,39 @@ public final class SelfTest {
                 Cast.clearLurk(server, zombie);
                 check("lurk: cleared", NpcStore.get(server).get(zombie).flatMap(com.sablednah.cast.core.NpcSpec::lurk).isEmpty() && !Cast.scare(server, zombie));
             }
+            // Hits: nothing hunts an NPC until it is exposed; then monsters go for it, and each blow is an event, never damage.
+            {
+                java.util.Map<UUID, Integer> hits = new java.util.HashMap<>();
+                net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener((com.sablednah.cast.api.NpcHitEvent ev) -> hits.merge(ev.npcId(), 1, Integer::sum));
+                Mob zb2 = (Mob) Cast.byId(server, zombie).flatMap(Npc::entity).orElse(null);
+                var hostile = EntityType.ZOMBIE.create(level, EntitySpawnReason.COMMAND);
+                if (zb2 != null && hostile != null) {
+                    hostile.snapTo(zb2.getX() + 2, zb2.getY(), zb2.getZ(), 0F, 0F);
+                    check("expose: a known NPC can be exposed", Cast.expose(server, zombie, 40) && Cast.isExposed(zombie));
+                    check("expose: an unknown one cannot", !Cast.expose(server, UUID.randomUUID(), 40));
+                    com.sablednah.cast.npc.Exposure.tick(server);
+                    check("expose: an exposed body can be struck (no longer invulnerable to the event)", !zb2.isInvulnerable());
+                    check("expose: a monster with nobody to chase is set on it", com.sablednah.cast.npc.Exposure.lureOne(hostile, zb2) && hostile.getTarget() == zb2);
+                    float hp = zb2.getHealth();
+                    zb2.hurtServer(level, level.damageSources().mobAttack(hostile), 3F);
+                    check("hit: a blow on the body is one hit, and no damage (" + hits.get(zombie) + ")", hits.getOrDefault(zombie, 0) == 1 && zb2.getHealth() == hp);
+                    zb2.hurtServer(level, level.damageSources().mobAttack(hostile), 3F);
+                    check("hit: a second blow in the same instant is folded into the first", hits.getOrDefault(zombie, 0) == 1);
+                    var ph = Cast.byId(server, human).flatMap(Npc::entity).orElse(null);
+                    if (ph instanceof HumanNpc phantom2) {
+                        phantom2.hurtServer(level, level.damageSources().mobAttack(hostile), 3F);
+                        check("hit: a blow on a phantom is a hit too", hits.getOrDefault(human, 0) == 1);
+                    } else {
+                        check("hit: a phantom to strike", false);
+                    }
+                    com.sablednah.cast.npc.Exposure.cover(server, zombie);
+                    Npcs.tick(server);
+                    check("expose: covered, the body is invulnerable again", !Cast.isExposed(zombie) && zb2.isInvulnerable());
+                } else {
+                    check("expose: a body and a monster to test with", false);
+                }
+                if (hostile != null) hostile.discard();
+            }
             viewer.discard();
         } finally {
             check("remove is idempotent (first)", Cast.remove(server, human));

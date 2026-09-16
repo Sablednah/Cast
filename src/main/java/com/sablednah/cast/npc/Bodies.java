@@ -87,7 +87,8 @@ public final class Bodies {
      */
     public static void maintain(Mob mob, NpcSpec spec, boolean anchored, java.util.function.Consumer<net.minecraft.world.phys.Vec3> adopt) {
         Brains.neutralise(mob);
-        if (!mob.isInvulnerable()) mob.setInvulnerable(true);
+        // Exposed bodies stay vulnerable to the damage EVENT (which Cast cancels), so their hits can be seen.
+        if (!mob.isInvulnerable() && !Exposure.isExposed(spec.id())) mob.setInvulnerable(true);
         // An anchored body is held up by us, not by the ground, so the gag can play before it drops;
         // let go (possessed, walked about) and vanilla gravity is back.
         if (!anchored) { mob.setNoGravity(false); Gravity.settle(spec.id()); return; }

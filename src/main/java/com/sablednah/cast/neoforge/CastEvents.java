@@ -48,6 +48,7 @@ public final class CastEvents {
         if (++tickCounter < 20) return;
         tickCounter = 0;
         Npcs.tick(event.getServer());
+        com.sablednah.cast.npc.Exposure.tick(event.getServer());
     }
 
     @SubscribeEvent
@@ -96,7 +97,10 @@ public final class CastEvents {
 
     @SubscribeEvent
     static void onDamage(LivingIncomingDamageEvent event) {
-        if (Npcs.npcIdOf(event.getEntity()).isPresent()) event.setCanceled(true);
+        if (Npcs.npcIdOf(event.getEntity()).isEmpty()) return;
+        event.setCanceled(true);
+        var source = event.getSource();
+        com.sablednah.cast.npc.Exposure.hit(event.getEntity(), java.util.Optional.ofNullable(source.getEntity() != null ? source.getEntity() : source.getDirectEntity()));
     }
 
     /** A body left the level: say why, on the server thread, for whoever holds a camera on it. */

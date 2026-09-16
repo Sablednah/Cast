@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * on the server thread and lets the first pass fall through -- vanilla then
  * re-invokes the method on the main thread, where this fires again and
  * handles it. Only a main-hand plain interact counts; the interact-at that
- * precedes it and the attack are ignored, so a click is one event.</p>
+ * precedes it is ignored, so a click is one event. An attack is reported as a hit.</p>
  */
 @Mixin(ServerGamePacketListenerImpl.class)
 public abstract class ServerGamePacketListenerImplMixin {
@@ -41,7 +41,7 @@ public abstract class ServerGamePacketListenerImplMixin {
                 if (hand == InteractionHand.MAIN_HAND) Npcs.interact(player, human.get().npcId, hand);
             }
             @Override public void onInteraction(InteractionHand hand, Vec3 pos) {}
-            @Override public void onAttack() {}
+            @Override public void onAttack() { com.sablednah.cast.npc.Exposure.hit(human.get(), java.util.Optional.of(player)); }
         });
         ci.cancel();
     }

@@ -59,6 +59,12 @@ stops and is anchored where it stands. `/cast follow` (five minutes) and
 stands there: a phantom in a straight line that climbs a block and passes through
 anything taller, a mob body on its own legs; either is put there after a minute.
 
+**Hits.** NPCs take no damage, but a blow on one -- a monster's swing, an arrow, a
+player's punch -- fires `NpcHitEvent` (one per half second at most). Nothing hunts an
+NPC on its own; `Cast.expose(server, npc, leaseTicks)` makes one worth attacking:
+monsters within `motion.lureRadius` are set on it once a second while the lease is
+renewed, and called off when it lapses. Chronicler's escorts that can fail use this.
+
 **Lurking** is the caged zombie in the basement. Put the NPC at the back of the
 cell, stand at the door and run `/cast lurk door`: it hides where it stands, groans
 now and then while someone is within `radius` (8), and roughly every `every`
@@ -91,7 +97,7 @@ right-click on an NPC carrying that role call you. `Cast.spawnHuman`,
 `npcHitAt`, `say`, `lookAt`, `drive` (a teleport), `equip` / `equipment`,
 `setAnchored`, `setDefyGravity`, `rename`, `setRoles`, `pinViewer`,
 `follow(server, npc, leader, leaseTicks)` / `stopFollowing` / `leaderOf`, `walkTo`,
-`isMoving`, `setLurk` / `clearLurk` / `scare`,
+`isMoving`, `setLurk` / `clearLurk` / `scare`, `expose` / `isExposed`, `NpcHitEvent`,
 `setRolesEnabled(player, false)` to work on an NPC without talking to it, and
 `NpcRemovedEvent` on the game bus. Every mob body carries `cast:npc` in its
 persistent data, the public marker. Gravity and anchoring are Cast's alone; a
@@ -101,7 +107,7 @@ mod that wants a floating NPC asks for it rather than setting it.
 
 `npcs.viewRange`, `npcs.lookRange`, `npcs.coyote`, `npcs.tabEntrySeconds`,
 `skins.fetchSkins`, `motion.walkSpeed`, `motion.rushSpeed`, `motion.followTeleport`,
-`motion.lurkGrowlChance`.
+`motion.lurkGrowlChance`, `motion.lureRadius`.
 
 ## Requirements and building
 
