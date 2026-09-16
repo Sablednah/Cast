@@ -85,6 +85,7 @@ public final class Npcs {
         });
         BROKEN.remove(npcId);
         UNANCHORED.remove(npcId);
+        Motion.forget(npcId);
         if (had) NeoForge.EVENT_BUS.post(new NpcRemovedEvent(npcId, NpcRemovedEvent.Reason.REMOVED));
         return had;
     }
@@ -161,7 +162,9 @@ public final class Npcs {
                 HUMANS.put(spec.id(), human);
             }
             boolean realising = false;
-            if (!spec.defyGravity()) {
+            // A phantom being walked is placed by Motion every tick; gravity and the idle look would fight it.
+            boolean moving = Motion.isMoving(spec.id());
+            if (!spec.defyGravity() && !moving) {
                 Vec3 landing = Gravity.landing(level, spec.pos());
                 double drop = spec.pos().y - landing.y;
                 if (drop > 0.01D) {
@@ -180,8 +183,9 @@ public final class Npcs {
                     Gravity.settle(spec.id());
                 }
             }
-            if (spec.lookAtPlayers() && !realising) look(level, human, spec);
+            if (spec.lookAtPlayers() && !realising && !moving) look(level, human, spec);
             Phantoms.update(level, human, spec);
+            if (spec.lurk().isPresent()) Motion.lurkSecond(server, spec);
         } else {
             if (!loaded) return;
             Optional<Mob> body = body(level, spec);
@@ -189,6 +193,7 @@ public final class Npcs {
                 final NpcSpec here = spec;
                 Bodies.maintain(body.get(), spec, isAnchored(spec.id()),
                         landed -> NpcStore.get(server).put(here.withPose(here.dimension(), landed, here.yaw(), here.pitch())));
+                if (spec.lurk().isPresent()) Motion.lurkSecond(server, spec);
                 return;
             }
             final NpcSpec fresh = spec; // spec is reassigned on the human path above, so the lambda needs a final copy
@@ -248,6 +253,25 @@ public final class Npcs {
     }
 
     // --- lookups ---
+
+    /** For Motion: the live phantom, or null. */
+    static HumanNpc human(UUID npcId) {
+        return HUMANS.get(npcId);
+    }
+
+    /** For Motion: the body Cast last saw, without a level lookup. */
+    static Optional<Mob> cachedBody(UUID npcId) {
+        Mob m = MOBS.get(npcId);
+        return m != null && m.isAlive() && !m.isRemoved() ? Optional.of(m) : Optional.empty();
+    }
+
+    static ServerLevel levelOf(MinecraftServer server, NpcSpec spec) {
+        return level(server, spec);
+    }
+
+    static Optional<Mob> bodyOf(ServerLevel level, NpcSpec spec) {
+        return body(level, spec);
+    }
 
     private static ServerLevel level(MinecraftServer server, NpcSpec spec) {
         return server.getLevel(ResourceKey.create(Registries.DIMENSION, spec.dimension()));
@@ -424,6 +448,15 @@ public final class Npcs {
         store.get(npcId).ifPresent(spec -> store.put(spec.withRoles(roles)));
     }
 
+    /** Set or clear a lurk; clearing stops a scare mid-rush and anchors it where it stands. */
+    public static void setLurk(MinecraftServer server, UUID npcId, Optional<com.sablednah.cast.core.LurkSpec> lurk) {
+        NpcStore store = NpcStore.get(server);
+        store.get(npcId).ifPresent(spec -> {
+            store.put(spec.withLurk(lurk));
+            if (lurk.isEmpty()) { Motion.forget(npcId); setAnchored(server, npcId, true); }
+        });
+    }
+
     public static void setDefyGravity(MinecraftServer server, UUID npcId, boolean defy) {
         NpcStore store = NpcStore.get(server);
         store.get(npcId).ifPresent(spec -> store.put(spec.withDefyGravity(defy)));
@@ -520,6 +553,7 @@ public final class Npcs {
         MOBS.clear();
         Gravity.clear();
         UNANCHORED.clear();
+        Motion.clear();
         Phantoms.clear();
         ROLES_OFF.clear();
     }

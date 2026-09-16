@@ -32,7 +32,14 @@ import net.minecraft.world.phys.Vec3;
  */
 public record NpcSpec(UUID id, NpcKind kind, String name, Optional<String> skin, Optional<Identifier> entityType,
         Identifier dimension, Vec3 pos, float yaw, float pitch, List<Identifier> roles, boolean lookAtPlayers,
-        Optional<UUID> entityUuid, Map<String, String> equipment, boolean defyGravity) {
+        Optional<UUID> entityUuid, Map<String, String> equipment, boolean defyGravity, Optional<LurkSpec> lurk) {
+
+    /** The constructor every caller before lurking used: no lurk. */
+    public NpcSpec(UUID id, NpcKind kind, String name, Optional<String> skin, Optional<Identifier> entityType,
+            Identifier dimension, Vec3 pos, float yaw, float pitch, List<Identifier> roles, boolean lookAtPlayers,
+            Optional<UUID> entityUuid, Map<String, String> equipment, boolean defyGravity) {
+        this(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, equipment, defyGravity, Optional.empty());
+    }
 
     /** {@code defyGravity}: stay exactly where placed even with nothing underneath. Off, an NPC drops to the ground and the anchor follows. */
 
@@ -52,39 +59,44 @@ public record NpcSpec(UUID id, NpcKind kind, String name, Optional<String> skin,
             Codec.BOOL.optionalFieldOf("look_at_players", true).forGetter(NpcSpec::lookAtPlayers),
             UUIDUtil.CODEC.optionalFieldOf("entity_uuid").forGetter(NpcSpec::entityUuid),
             Codec.unboundedMap(Codec.STRING, Codec.STRING).optionalFieldOf("equipment", Map.of()).forGetter(NpcSpec::equipment),
-            Codec.BOOL.optionalFieldOf("defy_gravity", false).forGetter(NpcSpec::defyGravity))
+            Codec.BOOL.optionalFieldOf("defy_gravity", false).forGetter(NpcSpec::defyGravity),
+            LurkSpec.CODEC.optionalFieldOf("lurk").forGetter(NpcSpec::lurk))
             .apply(i, NpcSpec::new));
 
     public NpcSpec withName(String n) {
-        return new NpcSpec(id, kind, n, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, equipment, defyGravity);
+        return new NpcSpec(id, kind, n, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, equipment, defyGravity, lurk);
     }
 
     public NpcSpec withSkin(Optional<String> s) {
-        return new NpcSpec(id, kind, name, s, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, equipment, defyGravity);
+        return new NpcSpec(id, kind, name, s, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, equipment, defyGravity, lurk);
     }
 
     public NpcSpec withPose(Identifier dim, Vec3 p, float y, float x) {
-        return new NpcSpec(id, kind, name, skin, entityType, dim, p, y, x, roles, lookAtPlayers, entityUuid, equipment, defyGravity);
+        return new NpcSpec(id, kind, name, skin, entityType, dim, p, y, x, roles, lookAtPlayers, entityUuid, equipment, defyGravity, lurk);
     }
 
     public NpcSpec withRoles(List<Identifier> r) {
-        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, r, lookAtPlayers, entityUuid, equipment, defyGravity);
+        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, r, lookAtPlayers, entityUuid, equipment, defyGravity, lurk);
     }
 
     public NpcSpec withLook(boolean look) {
-        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, look, entityUuid, equipment, defyGravity);
+        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, look, entityUuid, equipment, defyGravity, lurk);
     }
 
     public NpcSpec withEquipment(Map<String, String> e) {
-        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, e, defyGravity);
+        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, e, defyGravity, lurk);
     }
 
     public NpcSpec withDefyGravity(boolean d) {
-        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, equipment, d);
+        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, equipment, d, lurk);
+    }
+
+    public NpcSpec withLurk(Optional<LurkSpec> l) {
+        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, equipment, defyGravity, l);
     }
 
     public NpcSpec withEntityUuid(Optional<UUID> u) {
-        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, u, equipment, defyGravity);
+        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, u, equipment, defyGravity, lurk);
     }
 
     /** The profile name a client will accept: at most 16 characters. */
