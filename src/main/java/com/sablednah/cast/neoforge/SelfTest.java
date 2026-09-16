@@ -259,6 +259,66 @@ public final class SelfTest {
             check("equip: a wrong slot is refused", !Cast.equip(server, human, "hat", "minecraft:iron_helmet"));
             check("equip: a wrong item is refused", !Cast.equip(server, human, "offhand", "minecraft:no_such_thing"));
             check("equip: blank clears", Cast.equip(server, human, "mainhand", "") && Cast.byId(server, human).flatMap(Npc::entity).map(e -> ((net.minecraft.world.entity.LivingEntity) e).getMainHandItem().isEmpty()).orElse(false));
+            // Moving: a phantom follows a leader along the trail they walked, stops close, and lets go when the lease lapses.
+            {
+                var motion = com.sablednah.cast.npc.Motion.class;
+                Vec3 start = Cast.byId(server, human).flatMap(Npc::entity).map(e -> e.position()).orElse(here);
+                viewer.snapTo(start.x, start.y, start.z + 3, 0F, 0F);
+                viewer.setOnGround(true);
+                check("follow: a known NPC accepts a leader", Cast.follow(server, human, viewer, 40));
+                check("follow: an unknown NPC does not", !Cast.follow(server, UUID.randomUUID(), viewer, 40));
+                check("follow: it reports its leader", Cast.leaderOf(human).map(viewer.getUUID()::equals).orElse(false));
+                check("follow: a following body is unanchored", !Npcs.isAnchored(human));
+                // The leader walks eight blocks along x, a step per tick; the follower ticks along.
+                for (int t = 0; t < 32; t++) {
+                    viewer.snapTo(start.x + t * 0.25, start.y, start.z + 3, 0F, 0F);
+                    Cast.follow(server, human, viewer, 40);
+                    com.sablednah.cast.npc.Motion.tick(server);
+                }
+                for (int t = 0; t < 80; t++) { Cast.follow(server, human, viewer, 40); com.sablednah.cast.npc.Motion.tick(server); }
+                Vec3 followed = Cast.byId(server, human).flatMap(Npc::entity).map(e -> e.position()).orElse(start);
+                double gap = followed.distanceTo(viewer.position());
+                check("follow: it walked after the leader (moved " + String.format("%.1f", followed.distanceTo(start)) + ", gap " + String.format("%.1f", gap) + ")",
+                        followed.distanceTo(start) > 4.0 && gap < 4.0);
+                check("follow: it stopped short of the leader, not on top of them", gap > 1.5);
+                check("follow: the spec moved with the phantom", Cast.byId(server, human).map(n -> n.pos().distanceTo(followed) < 0.01).orElse(false));
+                // Nobody renews: the lease lapses and it is anchored where it stands.
+                for (int t = 0; t < 60; t++) com.sablednah.cast.npc.Motion.tick(server);
+                check("follow: an unrenewed lease lets go", !Cast.isMoving(human) && Cast.leaderOf(human).isEmpty());
+                check("follow: and it is anchored again", Npcs.isAnchored(human));
+                // walkTo: three blocks along z, and stands there.
+                Vec3 goal = followed.add(0, 0, 3);
+                check("walkTo: an NPC accepts a destination", Cast.walkTo(server, human, goal));
+                for (int t = 0; t < 60 && Cast.isMoving(human); t++) com.sablednah.cast.npc.Motion.tick(server);
+                Vec3 walked = Cast.byId(server, human).map(Npc::pos).orElse(followed);
+                check("walkTo: it got there and stopped (" + walked + " for " + goal + ", moving " + Cast.isMoving(human) + ", blocks " + level.getBlockState(net.minecraft.core.BlockPos.containing(followed.add(0, 0, 1))) + "/" + level.getBlockState(net.minecraft.core.BlockPos.containing(followed.add(0, 1, 1))) + ")",
+                        !Cast.isMoving(human) && Math.hypot(walked.x - goal.x, walked.z - goal.z) < 0.5 && Npcs.isAnchored(human));
+                if (motion == null) check("motion class", false);
+            }
+            // Lurking: the caged zombie. Scared on demand, it rushes the door, hammers, and slinks home.
+            // A body walks on its own legs only while the level ticks, which a self-test does not, so the
+            // rush and the slink both run out of time and are put there -- the phases are what is checked.
+            {
+                Vec3 home = Cast.byId(server, zombie).map(Npc::pos).orElse(here);
+                Vec3 door = home.add(3, 0, 0);
+                check("lurk: nothing to scare before it lurks", !Cast.scare(server, zombie));
+                Cast.setLurk(server, zombie, home, door, 8.0, 20);
+                check("lurk: saved with the NPC", NpcStore.get(server).get(zombie).flatMap(com.sablednah.cast.core.NpcSpec::lurk).map(l -> l.door().equals(door)).orElse(false));
+                check("lurk: a scare starts a rush", Cast.scare(server, zombie) && Cast.isMoving(zombie)
+                        && com.sablednah.cast.npc.Motion.lurkPhase(zombie).equals("rushing"));
+                for (int t = 0; t < 105; t++) com.sablednah.cast.npc.Motion.tick(server);
+                check("lurk: at the door, hammering (" + com.sablednah.cast.npc.Motion.lurkPhase(zombie) + ")",
+                        com.sablednah.cast.npc.Motion.lurkPhase(zombie).equals("at_door")
+                        && Cast.byId(server, zombie).map(n -> n.pos().distanceTo(door) < 1.5).orElse(false));
+                for (int t = 0; t < 45; t++) com.sablednah.cast.npc.Motion.tick(server);
+                check("lurk: then it slinks back", com.sablednah.cast.npc.Motion.lurkPhase(zombie).equals("slinking"));
+                for (int t = 0; t < 305; t++) com.sablednah.cast.npc.Motion.tick(server);
+                check("lurk: home in the dark, hiding, anchored (" + com.sablednah.cast.npc.Motion.lurkPhase(zombie) + ")",
+                        com.sablednah.cast.npc.Motion.lurkPhase(zombie).equals("hiding") && Npcs.isAnchored(zombie)
+                        && Cast.byId(server, zombie).map(n -> Math.hypot(n.pos().x - home.x, n.pos().z - home.z) < 1.5).orElse(false));
+                Cast.clearLurk(server, zombie);
+                check("lurk: cleared", NpcStore.get(server).get(zombie).flatMap(com.sablednah.cast.core.NpcSpec::lurk).isEmpty() && !Cast.scare(server, zombie));
+            }
             viewer.discard();
         } finally {
             check("remove is idempotent (first)", Cast.remove(server, human));

@@ -44,6 +44,7 @@ public final class CastEvents {
 
     @SubscribeEvent
     static void onTick(ServerTickEvent.Post event) {
+        com.sablednah.cast.npc.Motion.tick(event.getServer()); // movers only, every tick: a walk at one step a second is a slideshow
         if (++tickCounter < 20) return;
         tickCounter = 0;
         Npcs.tick(event.getServer());

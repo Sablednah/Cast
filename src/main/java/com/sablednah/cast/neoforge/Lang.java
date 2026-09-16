@@ -56,6 +56,12 @@ public final class Lang {
         def("msg.moved", "{prefix}&7Brought &f{name}&7 here.");
         def("msg.status", "{prefix}&f{count} NPC(s), {loaded} human phantom(s) loaded, roles: {roles}");
         def("msg.status.build", "&7Build: &f{build}");
+        def("msg.follow", "{prefix}&f{name}&7 follows you, on foot, along the way you walk. /cast follow stop, or five minutes, ends it.");
+        def("msg.follow.stop", "{prefix}&f{name}&7 stops and stays put.");
+        def("msg.lurk.set", "{prefix}&f{name}&7 lurks: hides at &f{hx} {hy} {hz}&7, rushes &f{dx} {dy} {dz}&7 about every &f{every}s&7 while someone is within &f{radius}&7. /cast lurk scare tries it now.");
+        def("msg.lurk.edited", "{prefix}&f{name}&7 now lurks within &f{radius}&7 blocks, about every &f{every}s&7.");
+        def("msg.lurk.none", "{prefix}&f{name}&7 is not lurking. Stand where it should rush to and run /cast lurk door.");
+        def("msg.lurk.off", "{prefix}&f{name}&7 no longer lurks, and stays where it is.");
     }
 
     public static String get(String key) {

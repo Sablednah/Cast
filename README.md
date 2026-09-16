@@ -47,6 +47,25 @@ item written as `/give` takes it (`minecraft:leather_chestplate[dyed_color=16777
 blank clears. Sent to phantom viewers, set on bodies, remembered across
 restarts. A wrong slot or item is refused with the NPC named and the reason.
 
+## Moving
+
+**Following** walks the trail the leader actually walked -- through the door they
+used, down the stairs they took -- so a phantom with no navigation never tries a
+wall. It stops a couple of blocks short, speeds up when it has fallen well behind,
+and past `motion.followTeleport` blocks appears a few steps back along the trail.
+A follow is **leased**: whoever asked renews it, and when renewals stop the NPC
+stops and is anchored where it stands. `/cast follow` (five minutes) and
+`/cast follow stop` try it by hand. **Walking** (`Cast.walkTo`) goes to a point and
+stands there: a phantom in a straight line that climbs a block and passes through
+anything taller, a mob body on its own legs; either is put there after a minute.
+
+**Lurking** is the caged zombie in the basement. Put the NPC at the back of the
+cell, stand at the door and run `/cast lurk door`: it hides where it stands, groans
+now and then while someone is within `radius` (8), and roughly every `every`
+seconds (20, randomised) while someone is, rushes the door, hammers on it three
+times and slinks back into the dark. `/cast lurk radius <blocks>`, `every <seconds>`,
+`scare` (now), `off`. Saved with the NPC.
+
 ## Commands (`cast.admin` or op level 2)
 
 | Command | What |
@@ -55,6 +74,8 @@ restarts. A wrong slot or item is refused with the NPC named and the reason.
 | `/cast spawn mob <entity> "<name>"` | a creature where you are looking |
 | `/cast remove` / `name <text>` / `skin <account>` / `look <bool>` / `here` / `say <text>` / `equip <slot> [item]` / `defygravity <bool>` | act on the NPC you look at, or the nearest |
 | `/cast role add\|remove <id>` | give the NPC a role another mod registered |
+| `/cast follow` / `follow stop` | follow you for five minutes, or stop |
+| `/cast lurk door [pos]` / `radius <blocks>` / `every <seconds>` / `scare` / `off` | the lurker: hides where it stands, rushes the door (where you stand) |
 | `/cast list` / `status` | what exists, and which build this is |
 
 Names may have spaces (quote them). A human's name tag shows the first 16
@@ -69,6 +90,8 @@ right-click on an NPC carrying that role call you. `Cast.spawnHuman`,
 `spawnMob`, `remove` (idempotent, works unloaded), `byId`, `all`, `npcAt(viewer, reach)`,
 `npcHitAt`, `say`, `lookAt`, `drive` (a teleport), `equip` / `equipment`,
 `setAnchored`, `setDefyGravity`, `rename`, `setRoles`, `pinViewer`,
+`follow(server, npc, leader, leaseTicks)` / `stopFollowing` / `leaderOf`, `walkTo`,
+`isMoving`, `setLurk` / `clearLurk` / `scare`,
 `setRolesEnabled(player, false)` to work on an NPC without talking to it, and
 `NpcRemovedEvent` on the game bus. Every mob body carries `cast:npc` in its
 persistent data, the public marker. Gravity and anchoring are Cast's alone; a
@@ -77,7 +100,8 @@ mod that wants a floating NPC asks for it rather than setting it.
 ## Config (`cast-common.toml`)
 
 `npcs.viewRange`, `npcs.lookRange`, `npcs.coyote`, `npcs.tabEntrySeconds`,
-`skins.fetchSkins`.
+`skins.fetchSkins`, `motion.walkSpeed`, `motion.rushSpeed`, `motion.followTeleport`,
+`motion.lurkGrowlChance`.
 
 ## Requirements and building
 
