@@ -131,11 +131,18 @@ absent, never a failure. Same filename, different bytes, is the trap it answers.
 heading, the README status line, then commit main, cherry-pick the version commit to `mc26.1`
 and `mc26.2`, build a jar per branch with the right JDK, tag `v<version>` on main, and
 `gh release create` with all three jars attached. Publishing the GitHub release fires
-`.github/workflows/curseforge.yml` and `modrinth.yml`; both upload every attached jar with the
-Minecraft version read from the `+mc` filename tag, and both skip cleanly until
+`.github/workflows/curseforge.yml` and `modrinth.yml`; both upload every attached `cast-*.jar`
+with the Minecraft version read from the `+mc` filename tag, and both skip cleanly until
 `CURSEFORGE_TOKEN` / `CURSEFORGE_PROJECT_ID` / `MODRINTH_TOKEN` / `MODRINTH_PROJECT_ID` exist.
 Never handle the tokens. `CURSEFORGE.md` is the store page; `docs/` holds the artwork
 (`icon-256.png` for Modrinth's 256 KiB cap) and screenshots. 1.0.0 shipped 2026-09-12.
+
+**A CurseForge project's file list is its identity to every other mod.** The app resolves a
+required dependency to the dependency project's newest APPROVED file for that Minecraft version
+and does not care what it is named, so a companion jar uploaded beside the mod is what dependents
+install -- most likely right after a release, while the mod's own file is still in moderation.
+LegendQuest shipped its example pack to StoryTeller users that way (2026-09-15). The workflow
+uploads `cast-*.jar` only; attach anything else to the GitHub release alone.
 
 ## Known traps
 
