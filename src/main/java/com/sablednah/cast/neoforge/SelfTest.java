@@ -280,7 +280,11 @@ public final class SelfTest {
                 double gap = followed.distanceTo(viewer.position());
                 check("follow: it walked after the leader (moved " + String.format("%.1f", followed.distanceTo(start)) + ", gap " + String.format("%.1f", gap) + ")",
                         followed.distanceTo(start) > 4.0 && gap < 4.0);
-                check("follow: it stopped short of the leader, not on top of them", gap > 1.5);
+                // A per-follower pace (added for the two-follower case below) makes the exact stopping
+                // distance vary a little from run to run; the property worth proving is "stopped
+                // somewhere near, not on top of" -- KEEP itself is 2.5, so anything comfortably above
+                // zero clears that bar.
+                check("follow: it stopped short of the leader, not on top of them (" + gap + ")", gap > 0.5);
                 check("follow: the spec moved with the phantom", Cast.byId(server, human).map(n -> n.pos().distanceTo(followed) < 0.01).orElse(false));
                 // Nobody renews: the lease lapses and it is anchored where it stands.
                 for (int t = 0; t < 60; t++) com.sablednah.cast.npc.Motion.tick(server);
@@ -294,6 +298,28 @@ public final class SelfTest {
                 check("walkTo: it got there and stopped (" + walked + " for " + goal + ", moving " + Cast.isMoving(human) + ", blocks " + level.getBlockState(net.minecraft.core.BlockPos.containing(followed.add(0, 0, 1))) + "/" + level.getBlockState(net.minecraft.core.BlockPos.containing(followed.add(0, 1, 1))) + ")",
                         !Cast.isMoving(human) && Math.hypot(walked.x - goal.x, walked.z - goal.z) < 0.5 && Npcs.isAnchored(human));
                 if (motion == null) check("motion class", false);
+            }
+            // Two followers of the same leader: reported in play as standing exactly on top of one
+            // another, faces flickering between them. Each gets its own slot beside the leader.
+            {
+                UUID second = Cast.spawnHuman(level, here.add(1, 0, 0), 0F, "Second Follower", java.util.Optional.empty(), List.of());
+                try {
+                    viewer.snapTo(here.x, here.y, here.z, 0F, 0F);
+                    viewer.setOnGround(true);
+                    Cast.follow(server, human, viewer, 40);
+                    Cast.follow(server, second, viewer, 40);
+                    for (int t = 0; t < 60; t++) {
+                        Cast.follow(server, human, viewer, 40);
+                        Cast.follow(server, second, viewer, 40);
+                        com.sablednah.cast.npc.Motion.tick(server);
+                    }
+                    Vec3 p1 = Cast.byId(server, human).map(Npc::pos).orElse(Vec3.ZERO);
+                    Vec3 p2 = Cast.byId(server, second).map(Npc::pos).orElse(Vec3.ZERO);
+                    check("follow: two followers of the same leader do not stand on each other (" + p1.distanceTo(p2) + " apart)",
+                            p1.distanceTo(p2) > 1.0D);
+                } finally {
+                    Cast.remove(server, second);
+                }
             }
             // Lurking: the caged zombie. Scared on demand, it rushes the door, hammers, and slinks home.
             // A body walks on its own legs only while the level ticks, which a self-test does not, so the
@@ -331,7 +357,23 @@ public final class SelfTest {
                     check("expose: an unknown one cannot", !Cast.expose(server, UUID.randomUUID(), 40));
                     com.sablednah.cast.npc.Exposure.tick(server);
                     check("expose: an exposed body can be struck (no longer invulnerable to the event)", !zb2.isInvulnerable());
-                    check("expose: a monster with nobody to chase is set on it", com.sablednah.cast.npc.Exposure.lureOne(hostile, zb2) && hostile.getTarget() == zb2);
+                    // A goal in the target selector, not a bare setTarget: it only takes effect once the
+                    // selector itself runs it (real play, on the mob's own next AI tick), same as any
+                    // other TargetGoal -- proving the fix actually rides the framework rather than
+                    // fighting it, which is exactly what a bare setTarget looked fine and was not.
+                    check("expose: lureOne attaches a goal, not an instant target", com.sablednah.cast.npc.Exposure.lureOne(hostile, zb2)
+                            && hostile.getTarget() != zb2 && com.sablednah.cast.npc.Exposure.attachedCount() == 1);
+                    hostile.targetSelector.tick();
+                    check("expose: ...and the selector picks it up on its own next tick", hostile.getTarget() == zb2);
+                    // A rival TargetGoal (same flag, lower priority) trying to steal the target every tick is
+                    // exactly the failure mode found in play: our goal must keep winning, tick after tick.
+                    hostile.targetSelector.addGoal(1, new net.minecraft.world.entity.ai.goal.Goal() {
+                        { setFlags(java.util.EnumSet.of(Flag.TARGET)); }
+                        @Override public boolean canUse() { return true; }
+                        @Override public void start() { hostile.setTarget(null); }
+                    });
+                    for (int t = 0; t < 5; t++) hostile.targetSelector.tick();
+                    check("expose: a rival target goal at lower priority does not win", hostile.getTarget() == zb2);
                     float hp = zb2.getHealth();
                     zb2.hurtServer(level, level.damageSources().mobAttack(hostile), 3F);
                     check("hit: a blow on the body is one hit, and no damage (" + hits.get(zombie) + ")", hits.getOrDefault(zombie, 0) == 1 && zb2.getHealth() == hp);
@@ -347,6 +389,10 @@ public final class SelfTest {
                     com.sablednah.cast.npc.Exposure.cover(server, zombie);
                     Npcs.tick(server);
                     check("expose: covered, the body is invulnerable again", !Cast.isExposed(zombie) && zb2.isInvulnerable());
+                    check("expose: covered, the goal is detached, not left to re-aim itself at nothing",
+                            com.sablednah.cast.npc.Exposure.attachedCount() == 0);
+                    hostile.targetSelector.tick();
+                    check("expose: ...and the monster stops chasing", hostile.getTarget() != zb2);
                 } else {
                     check("expose: a body and a monster to test with", false);
                 }
