@@ -2,6 +2,9 @@
 
 ## Unreleased (1.1.0)
 
+- Fix: exposed NPCs were flatly ignored by monsters in play -- `setTarget` from outside the AI loses to the mob's own targeting goal re-evaluating and clearing it. Now a real goal in the mob's own target selector, arbitrated the same way as its other targeting goals.
+- Fix: two followers of the same leader stood on top of each other. Each now holds a stable slot beside the leader, with a small per-NPC pace variance.
+
 - **Following**: `Cast.follow(server, npc, leader, leaseTicks)` walks the trail the leader walked, stops short, catches up, and lets go when the lease is not renewed. `/cast follow`, `/cast follow stop`. For Chronicler's escort quests.
 - **Walking**: `Cast.walkTo` goes to a point on foot and stands there, anchored.
 - **Lurking**: `/cast lurk door` and `Cast.setLurk` -- the caged zombie. Hides at the back, groans when someone is near, now and then rushes the door, hammers on it and slinks back. Saved with the NPC.
