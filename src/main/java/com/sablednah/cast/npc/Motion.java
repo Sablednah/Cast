@@ -60,6 +60,8 @@ public final class Motion {
         final ArrayDeque<Vec3> crumbs = new ArrayDeque<>();
         double bestDistance = Double.MAX_VALUE;
         long lastProgress;
+        /** Which side of the leader this one stands on, assigned once. See {@link #lateralOffset}. */
+        int slot;
     }
 
     /** A walk to one point, then something to do on arrival. */
@@ -81,6 +83,7 @@ public final class Motion {
         Follow f = FOLLOWS.get(npcId);
         if (f == null) {
             f = new Follow();
+            f.slot = freeSlot(leader);
             FOLLOWS.put(npcId, f);
             WALKS.remove(npcId);
             Npcs.setAnchored(server, npcId, false);
@@ -90,6 +93,7 @@ public final class Motion {
             // A new leader (a party member took over, or the same player respawned as a new object): a fresh trail.
             if (f.leader != null && !f.leader.getUUID().equals(leader.getUUID())) f.crumbs.clear();
             f.leader = leader;
+            f.slot = freeSlot(leader); // a different leader's other followers may already hold this one
         }
         f.expires = TICKS + Math.max(20, leaseTicks);
         return true;
@@ -166,18 +170,47 @@ public final class Motion {
         }
     }
 
+    /** The lowest slot not already held by one of this leader's other followers. */
+    private static int freeSlot(ServerPlayer leader) {
+        java.util.BitSet taken = new java.util.BitSet();
+        for (Follow other : FOLLOWS.values()) if (other.leader == leader) taken.set(other.slot);
+        return taken.nextClearBit(0);
+    }
+
+    /**
+     * A small, stable displacement from the leader for this one to aim at, so two followers of the
+     * same leader do not converge on literally the same point -- reported in play as two NPCs
+     * standing exactly on top of each other, faces flickering between them. Slot 0/1 sit either
+     * side of the leader's own heading, 2/3 a step further out, and so on.
+     */
+    private static Vec3 lateralOffset(Follow f, ServerPlayer leader) {
+        if (f.slot == 0) return Vec3.ZERO; // the first follower gets the plain spot; only the rest step aside
+        int side = f.slot % 2 == 1 ? -1 : 1;
+        int rank = (f.slot + 1) / 2;
+        double rad = Math.toRadians(leader.getYRot() + 90.0F);
+        double dist = rank * 1.4D;
+        return new Vec3(-Math.sin(rad) * side * dist, 0, Math.cos(rad) * side * dist);
+    }
+
+    /** A per-follower pace, so two NPCs walking the same crumb queue do not stay perfectly in step. */
+    private static double paceOf(NpcSpec spec, double base) {
+        int h = spec.id().hashCode();
+        return base * (0.92D + (Math.floorMod(h, 17)) / 100.0D); // 0.92 .. 1.08
+    }
+
     private static void tickFollow(MinecraftServer server, NpcSpec spec, Follow f, long now) {
         ServerPlayer leader = f.leader;
         ServerLevel level = Npcs.levelOf(server, spec);
         if (level == null || leader.isRemoved() || leader.level() != level) return; // wait where we are
         Vec3 feet = leader.position();
+        Vec3 anchor = feet.add(lateralOffset(f, leader));
         Vec3 last = f.crumbs.peekLast();
         if ((leader.onGround() || leader.isInWater() || leader.onClimbable()) && (last == null || last.distanceToSqr(feet) >= CRUMB * CRUMB)) {
             f.crumbs.addLast(feet);
             if (f.crumbs.size() > MAX_CRUMBS) f.crumbs.pollFirst();
         }
         Vec3 at = position(spec);
-        double toLeader = at.distanceTo(feet);
+        double toLeader = at.distanceTo(anchor);
         double teleport = CastConfig.FOLLOW_TELEPORT.get();
         if (teleport > 0 && toLeader > teleport && !f.crumbs.isEmpty()) {
             // Too far behind to catch up on foot: appear a few steps back along the trail, as a tamed wolf would.
@@ -197,19 +230,19 @@ public final class Motion {
         }
         if (toLeader < f.bestDistance - 0.5D) { f.bestDistance = toLeader; f.lastProgress = now; }
         // Lagging far behind on the trail: pick up the pace.
-        double speed = CastConfig.WALK_SPEED.get() * (f.crumbs.size() > 12 ? 1.6D : 1.0D);
+        double speed = paceOf(spec, CastConfig.WALK_SPEED.get() * (f.crumbs.size() > 12 ? 1.6D : 1.0D));
         if (spec.kind() == NpcKind.HUMAN) {
             HumanNpc h = Npcs.human(spec.id());
             if (h == null) return;
             double budget = speed;
             while (budget > 0 && !f.crumbs.isEmpty()) {
-                Vec3 next = f.crumbs.peekFirst();
+                Vec3 next = f.crumbs.peekFirst().add(lateralOffset(f, leader));
                 double d = h.position().distanceTo(next);
                 if (d <= budget) {
                     stepHuman(server, level, h, spec.id(), next, d, false);
                     f.crumbs.pollFirst();
                     budget -= Math.max(d, 0.05D);
-                    if (h.position().distanceTo(feet) <= KEEP) break;
+                    if (h.position().distanceTo(anchor) <= KEEP) break;
                 } else {
                     stepHuman(server, level, h, spec.id(), next, budget, false);
                     budget = 0;
@@ -218,10 +251,10 @@ public final class Motion {
             return;
         }
         Npcs.bodyOf(level, spec).ifPresent(mob -> {
-            if (now % 10 == 0) mob.getNavigation().moveTo(leader, 1.25D);
+            if (now % 10 == 0) mob.getNavigation().moveTo(anchor.x, anchor.y, anchor.z, 1.25D);
             // Stuck (a fence, a gap it will not jump): take the next step of the trail by hand.
             if (now - f.lastProgress > 60 && !f.crumbs.isEmpty()) {
-                Vec3 hop = f.crumbs.pollFirst();
+                Vec3 hop = f.crumbs.pollFirst().add(lateralOffset(f, leader));
                 mob.snapTo(hop.x, hop.y, hop.z, mob.getYRot(), mob.getXRot());
                 mob.setDeltaMovement(Vec3.ZERO);
                 f.lastProgress = now - 50; // one hop every ten ticks until it is moving again
