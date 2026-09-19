@@ -66,7 +66,7 @@ public final class Exposure {
             ServerLevel level = Npcs.levelOf(server, spec);
             Entity body = entity(level, spec);
             if (level == null) return;
-            if (body instanceof Mob m) m.setInvulnerable(true);
+            if (body instanceof LivingEntity le) le.setInvulnerable(true);
             // Called off: leaving the goal attached would just have it re-aim at nothing next tick.
             if (body != null) detachAllAiming(body);
         });
@@ -92,7 +92,12 @@ public final class Exposure {
     static int lure(ServerLevel level, NpcSpec spec) {
         Entity e = entity(level, spec);
         if (!(e instanceof LivingEntity target)) return 0;
-        if (target instanceof Mob m && m.isInvulnerable()) m.setInvulnerable(false); // a hit must reach the damage event to be seen
+        // A hit must reach the damage event to be seen -- and on the 26.x line, Mob#setTarget quietly
+        // refuses an invulnerable target of its own accord (asValidTarget -> canAttack -> canBeSeenAsEnemy),
+        // not merely leaving it undamaged: a HumanNpc (a FakePlayer, invulnerable from the moment it is
+        // built, same as every FakePlayer) was never a Mob, so this used to only ever clear a body's flag
+        // and left every human-kind exposed NPC untargetable on those versions.
+        if (target.isInvulnerable()) target.setInvulnerable(false);
         double r = CastConfig.LURE_RADIUS.get();
         int n = 0;
         for (Mob m : level.getEntitiesOfClass(Mob.class, new AABB(target.blockPosition()).inflate(r),

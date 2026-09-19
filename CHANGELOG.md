@@ -3,6 +3,8 @@
 ## Unreleased (1.1.0)
 
 - Fix: exposed NPCs were flatly ignored by monsters in play -- `setTarget` from outside the AI loses to the mob's own targeting goal re-evaluating and clearing it. Now a real goal in the mob's own target selector, arbitrated the same way as its other targeting goals.
+- **Provoke**: a real hit on a monster currently after an exposed NPC turns it on the hitter for `motion.threatSeconds`, so a player can pull it off the NPC on purpose; it reverts to the NPC on its own once the window lapses with no further hit.
+- Fix: a monster could never be pointed at a `FakePlayer`-backed target (every human-kind NPC, and anything standing in for a player) -- newer Minecraft's `Mob#setTarget` silently refuses an invulnerable target, and `FakePlayer`'s own constructor makes every one invulnerable from birth. `Exposure` now clears it on whatever it exposes, body or human.
 - Fix: two followers of the same leader stood on top of each other. Each now holds a stable slot beside the leader, with a small per-NPC pace variance.
 
 - **Following**: `Cast.follow(server, npc, leader, leaseTicks)` walks the trail the leader walked, stops short, catches up, and lets go when the lease is not renewed. `/cast follow`, `/cast follow stop`. For Chronicler's escort quests.
