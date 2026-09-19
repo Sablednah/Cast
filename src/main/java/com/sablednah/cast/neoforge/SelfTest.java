@@ -396,7 +396,7 @@ public final class SelfTest {
                     check("provoke: a hit turns it on whoever landed it", hostile.getTarget() == stranger);
                     hostile.targetSelector.tick();
                     check("provoke: it keeps after them while the window holds", hostile.getTarget() == stranger);
-                    var untouched = EntityType.ZOMBIE.create(level, EntitySpawnReason.COMMAND);
+                    var untouched = net.minecraft.world.entity.EntityTypes.ZOMBIE.create(level, EntitySpawnReason.COMMAND);
                     if (untouched != null) {
                         com.sablednah.cast.npc.Exposure.provoke(untouched, stranger);
                         check("provoke: a mob nothing has lured is an untouched no-op", untouched.getTarget() == null);
