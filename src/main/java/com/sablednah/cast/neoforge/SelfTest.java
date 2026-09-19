@@ -386,6 +386,23 @@ public final class SelfTest {
                     } else {
                         check("hit: a phantom to strike", false);
                     }
+                    // Provoked: hitting the monster while it is after an NPC turns it on the hitter instead --
+                    // priority the other way round from an exposed NPC, which is meant to be a magnet, not a wall.
+                    var stranger = new FakePlayer(level, new GameProfile(UUID.nameUUIDFromBytes("cast:stranger".getBytes()), "CastStranger"));
+                    stranger.snapTo(hostile.getX() + 1, hostile.getY(), hostile.getZ(), 0F, 0F);
+                    check("provoke: before any hit, still after the NPC", hostile.getTarget() == zb2);
+                    com.sablednah.cast.npc.Exposure.provoke(hostile, stranger);
+                    hostile.targetSelector.tick();
+                    check("provoke: a hit turns it on whoever landed it", hostile.getTarget() == stranger);
+                    hostile.targetSelector.tick();
+                    check("provoke: it keeps after them while the window holds", hostile.getTarget() == stranger);
+                    var untouched = EntityType.ZOMBIE.create(level, EntitySpawnReason.COMMAND);
+                    if (untouched != null) {
+                        com.sablednah.cast.npc.Exposure.provoke(untouched, stranger);
+                        check("provoke: a mob nothing has lured is an untouched no-op", untouched.getTarget() == null);
+                        untouched.discard();
+                    }
+                    stranger.discard();
                     com.sablednah.cast.npc.Exposure.cover(server, zombie);
                     Npcs.tick(server);
                     check("expose: covered, the body is invulnerable again", !Cast.isExposed(zombie) && zb2.isInvulnerable());

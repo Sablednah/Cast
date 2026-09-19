@@ -17,6 +17,7 @@ public final class CastConfig {
     public static final ModConfigSpec.DoubleValue FOLLOW_TELEPORT;
     public static final ModConfigSpec.DoubleValue LURK_GROWL_CHANCE;
     public static final ModConfigSpec.DoubleValue LURE_RADIUS;
+    public static final ModConfigSpec.IntValue THREAT_SECONDS;
 
     static {
         BUILDER.comment("NPCs").push("npcs");
@@ -57,6 +58,11 @@ public final class CastConfig {
                 .comment("An exposed NPC (an escort another mod has made worth attacking) draws monsters within this",
                         "many blocks. Not exposed, nothing hunts an NPC.")
                 .defineInRange("lureRadius", 16.0D, 2.0D, 64.0D);
+        THREAT_SECONDS = BUILDER
+                .comment("A real hit on a monster currently after an exposed NPC draws its attention to whoever",
+                        "landed it for this many seconds, so a player can pull it off the NPC on purpose; it",
+                        "reverts to the NPC on its own once the window lapses with no further hit.")
+                .defineInRange("threatSeconds", 5, 1, 60);
         BUILDER.pop();
 
         BUILDER.comment("Skins").push("skins");

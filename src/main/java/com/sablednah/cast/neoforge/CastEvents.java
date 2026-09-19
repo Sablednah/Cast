@@ -103,6 +103,17 @@ public final class CastEvents {
         com.sablednah.cast.npc.Exposure.hit(event.getEntity(), java.util.Optional.ofNullable(source.getEntity() != null ? source.getEntity() : source.getDirectEntity()));
     }
 
+    /**
+     * The other side of the same blow: a monster currently after an exposed NPC that a player just
+     * struck turns on them instead, for a short window -- so the player can pull it off the NPC on
+     * purpose. A no-op for anything {@link com.sablednah.cast.npc.Exposure} has not lured.
+     */
+    @SubscribeEvent
+    static void onMonsterHit(LivingIncomingDamageEvent event) {
+        if (!(event.getEntity() instanceof net.minecraft.world.entity.Mob mob) || Npcs.npcIdOf(mob).isPresent()) return;
+        if (event.getSource().getEntity() instanceof ServerPlayer player) com.sablednah.cast.npc.Exposure.provoke(mob, player);
+    }
+
     /** A body left the level: say why, on the server thread, for whoever holds a camera on it. */
     @SubscribeEvent
     static void onLeave(EntityLeaveLevelEvent event) {
