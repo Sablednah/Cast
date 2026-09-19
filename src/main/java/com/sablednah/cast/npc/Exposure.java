@@ -143,6 +143,18 @@ public final class Exposure {
         return true;
     }
 
+    /**
+     * A real hit landed on {@code mob} from {@code attacker}: if it is currently lured onto an
+     * exposed NPC, that draws its attention for {@code motion.threatSeconds} -- so a player can
+     * step in and pull it off the NPC on purpose -- and it goes back to the NPC on its own once
+     * the window lapses with no further hit. A no-op for a mob nothing has lured.
+     */
+    public static void provoke(Mob mob, LivingEntity attacker) {
+        Attached a = ATTACHED.get(mob.getUUID());
+        if (a == null || a.mob() != mob) return;
+        a.goal().provoke(attacker, mob.level().getGameTime() + CastConfig.THREAT_SECONDS.get() * 20L);
+    }
+
     /** A blow landed on an NPC. Reports it (once per half second) and says whether it was one. */
     public static boolean hit(Entity npcEntity, Optional<Entity> attacker) {
         Optional<UUID> id = Npcs.npcIdOf(npcEntity);
