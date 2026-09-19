@@ -367,13 +367,15 @@ public final class SelfTest {
                     check("expose: ...and the selector picks it up on its own next tick", hostile.getTarget() == zb2);
                     // A rival TargetGoal (same flag, lower priority) trying to steal the target every tick is
                     // exactly the failure mode found in play: our goal must keep winning, tick after tick.
-                    hostile.targetSelector.addGoal(1, new net.minecraft.world.entity.ai.goal.Goal() {
+                    var rival = new net.minecraft.world.entity.ai.goal.Goal() {
                         { setFlags(java.util.EnumSet.of(Flag.TARGET)); }
                         @Override public boolean canUse() { return true; }
                         @Override public void start() { hostile.setTarget(null); }
-                    });
+                    };
+                    hostile.targetSelector.addGoal(1, rival);
                     for (int t = 0; t < 5; t++) hostile.targetSelector.tick();
                     check("expose: a rival target goal at lower priority does not win", hostile.getTarget() == zb2);
+                    hostile.targetSelector.removeGoal(rival); // a fixture for this one check, not left to fight every check after it
                     float hp = zb2.getHealth();
                     zb2.hurtServer(level, level.damageSources().mobAttack(hostile), 3F);
                     check("hit: a blow on the body is one hit, and no damage (" + hits.get(zombie) + ")", hits.getOrDefault(zombie, 0) == 1 && zb2.getHealth() == hp);
@@ -389,6 +391,7 @@ public final class SelfTest {
                     // Provoked: hitting the monster while it is after an NPC turns it on the hitter instead --
                     // priority the other way round from an exposed NPC, which is meant to be a magnet, not a wall.
                     var stranger = new FakePlayer(level, new GameProfile(UUID.nameUUIDFromBytes("cast:stranger".getBytes()), "CastStranger"));
+                    stranger.setInvulnerable(false); // a FakePlayer starts invulnerable (its own constructor); a real attacking player is not, and a Mob may not target one that is
                     stranger.snapTo(hostile.getX() + 1, hostile.getY(), hostile.getZ(), 0F, 0F);
                     check("provoke: before any hit, still after the NPC", hostile.getTarget() == zb2);
                     com.sablednah.cast.npc.Exposure.provoke(hostile, stranger);
