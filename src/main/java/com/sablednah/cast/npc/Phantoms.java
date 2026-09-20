@@ -13,6 +13,7 @@ import com.sablednah.cast.core.NpcSpec;
 
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
+import net.minecraft.network.protocol.game.ClientboundAnimatePacket;
 import net.minecraft.network.protocol.game.ClientboundEntityPositionSyncPacket;
 import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket;
@@ -23,6 +24,7 @@ import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.phys.Vec3;
 
@@ -95,6 +97,16 @@ public final class Phantoms {
         List<com.mojang.datafixers.util.Pair<net.minecraft.world.entity.EquipmentSlot, net.minecraft.world.item.ItemStack>> all = new java.util.ArrayList<>();
         for (var slot : net.minecraft.world.entity.EquipmentSlot.values()) all.add(com.mojang.datafixers.util.Pair.of(slot, npc.getItemBySlot(slot)));
         for (ServerPlayer p : viewersOf(level, npc)) send(p, new net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket(npc.getId(), all));
+    }
+
+    /**
+     * A one-shot gesture, for a scripted scene: the phantom has no ordinary entity tracker to
+     * broadcast one on its own (it is never added to a level), so this is one more packet type
+     * through the same per-viewer push every other piece of its state already goes through.
+     */
+    public static void broadcastSwing(ServerLevel level, HumanNpc npc, InteractionHand hand) {
+        int action = hand == InteractionHand.OFF_HAND ? ClientboundAnimatePacket.SWING_OFF_HAND : ClientboundAnimatePacket.SWING_MAIN_HAND;
+        for (ServerPlayer p : viewersOf(level, npc)) send(p, new ClientboundAnimatePacket(npc, action));
     }
 
     /** Player-info entries to withdraw: viewer -> npc -> the game time it is due. */

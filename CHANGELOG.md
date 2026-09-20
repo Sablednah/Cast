@@ -7,6 +7,7 @@
 - Fix: a monster could never be pointed at a `FakePlayer`-backed target (every human-kind NPC, and anything standing in for a player) -- newer Minecraft's `Mob#setTarget` silently refuses an invulnerable target, and `FakePlayer`'s own constructor makes every one invulnerable from birth. `Exposure` now clears it on whatever it exposes, body or human.
 - Fix: two followers of the same leader stood on top of each other. Each now holds a stable slot beside the leader, with a small per-NPC pace variance.
 
+- **Swing**: `Cast.swing(server, npc, hand)` -- a one-shot gesture for a scripted scene (a blacksmith striking an anvil, a guard warning somebody off). Works on either kind: a mob body under the same vanilla call any mob would use, a human phantom through the same per-viewer packet push everything else about it already goes through, since it has no ordinary entity tracker to broadcast one on its own. Raised by the LegendQuest/StoryTeller session (`/st swing`), which could reach mob bodies already but had no way to reach a phantom.
 - **Following**: `Cast.follow(server, npc, leader, leaseTicks)` walks the trail the leader walked, stops short, catches up, and lets go when the lease is not renewed. `/cast follow`, `/cast follow stop`. For Chronicler's escort quests.
 - **Walking**: `Cast.walkTo` goes to a point on foot and stands there, anchored.
 - **Lurking**: `/cast lurk door` and `Cast.setLurk` -- the caged zombie. Hides at the back, groans when someone is near, now and then rushes the door, hammers on it and slinks back. Saved with the NPC.

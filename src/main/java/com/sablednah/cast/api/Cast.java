@@ -149,6 +149,16 @@ public final class Cast {
     }
 
     /**
+     * A one-shot swing, for a scripted scene: a blacksmith striking an anvil, a guard warning
+     * somebody off. Works on either kind -- a mob body swings under the same vanilla call any
+     * other mob would; a human phantom (never an ordinary tracked entity) gets the same per-viewer
+     * packet push every other piece of its state already goes through. False for an unknown NPC.
+     */
+    public static boolean swing(MinecraftServer server, UUID npcId, net.minecraft.world.InteractionHand hand) {
+        return Npcs.swing(server, npcId, hand);
+    }
+
+    /**
      * Named for the laugh, kept for the use: an NPC that defies gravity stays exactly
      * where it was put with nothing underneath. Off (the default), it drops to the
      * ground once a second and its anchor follows it down.
