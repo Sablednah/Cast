@@ -435,6 +435,31 @@ public final class Npcs {
         return true;
     }
 
+    /**
+     * A one-shot swing, for a scripted scene: a blacksmith striking an anvil, a guard warning
+     * somebody off. A mob body is a normal tracked entity and already broadcasts its own animation
+     * state the moment {@code swing} is called on it -- the same call a plain vanilla mob would use.
+     * A human phantom is not: nothing to call {@code swing} ON at all in the sense a client would
+     * ever see, since it is never added to a level and has no ordinary entity tracker sending it
+     * anywhere. {@link Phantoms#broadcastSwing} is the phantom's equivalent -- the same per-viewer
+     * packet push every other piece of its state (position, equipment, rotation) already goes
+     * through, one more packet type added to it rather than a new mechanism.
+     */
+    public static boolean swing(MinecraftServer server, UUID npcId, InteractionHand hand) {
+        Optional<NpcSpec> found = NpcStore.get(server).get(npcId);
+        if (found.isEmpty()) return false;
+        NpcSpec spec = found.get();
+        ServerLevel level = level(server, spec);
+        if (level == null) return false;
+        if (spec.kind() == NpcKind.HUMAN) {
+            HumanNpc human = HUMANS.get(npcId);
+            if (human == null) return false;
+            Phantoms.broadcastSwing(level, human, hand);
+            return true;
+        }
+        return body(level, spec).map(m -> { m.swing(hand, true); return true; }).orElse(false);
+    }
+
     public static void setSkin(MinecraftServer server, UUID npcId, Optional<String> skin) {
         NpcStore store = NpcStore.get(server);
         store.get(npcId).ifPresent(spec -> {

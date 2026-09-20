@@ -175,6 +175,15 @@ uploads `cast-*.jar` only; attach anything else to the GitHub release alone.
   namespaced folder; `EntityType.X` → `EntityTypes.X` on 26.2 only.
 - ZombieMod re-genuses natural spawns and clears goals unrecoverably; Cast
   spawns with `EntitySpawnReason.COMMAND` so its roll never touches a body.
+- **A human phantom has no ordinary entity tracker, so no vanilla broadcast
+  method (`swing`, damage flash, particles tied to an entity event) ever
+  reaches a client on its own** -- it is never added to a level. Every piece
+  of a phantom's visible state is instead a packet Cast sends by hand to a
+  tracked viewer list (`Phantoms.VIEWERS`): position, rotation, equipment,
+  and now `swing` (`Phantoms.broadcastSwing`, `ClientboundAnimatePacket`).
+  Reaching for a plain `LivingEntity` method on a phantom and expecting a
+  client to see it is the trap; a mob body has no such problem (it is a real
+  tracked entity, and `Cast.swing`'s mob-body branch is a bare vanilla call).
 
 ## Artwork
 
