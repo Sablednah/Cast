@@ -259,6 +259,12 @@ public final class SelfTest {
             check("equip: a wrong slot is refused", !Cast.equip(server, human, "hat", "minecraft:iron_helmet"));
             check("equip: a wrong item is refused", !Cast.equip(server, human, "offhand", "minecraft:no_such_thing"));
             check("equip: blank clears", Cast.equip(server, human, "mainhand", "") && Cast.byId(server, human).flatMap(Npc::entity).map(e -> ((net.minecraft.world.entity.LivingEntity) e).getMainHandItem().isEmpty()).orElse(false));
+            // Swing: a scripted gesture -- a mob body under vanilla's own call, a human phantom through
+            // Phantoms' packet push, since it has no ordinary entity tracker to broadcast one on its own.
+            check("swing: a mob body swings", Cast.swing(server, villager, net.minecraft.world.InteractionHand.MAIN_HAND));
+            check("swing: a human phantom swings (no viewer connected to see it, but it must not throw)",
+                    Cast.swing(server, human, net.minecraft.world.InteractionHand.OFF_HAND));
+            check("swing: an unknown NPC is refused", !Cast.swing(server, UUID.randomUUID(), net.minecraft.world.InteractionHand.MAIN_HAND));
             // Moving: a phantom follows a leader along the trail they walked, stops close, and lets go when the lease lapses.
             {
                 var motion = com.sablednah.cast.npc.Motion.class;
