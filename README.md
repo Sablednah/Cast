@@ -1,31 +1,21 @@
+![Cast](docs/wordmark-850.png)
+
 # Cast
 
-NPCs a vanilla client can see, for other mods to give roles to. Two bodies:
-
-- **Human** — a player-model NPC with a real account's skin. It is a
-  *phantom*: rendered purely by packets to the players who can see it, never
-  added to the world. So it is not a player: it does not count towards
-  sleeping, does not anchor mob spawning, does not keep chunks loaded and is
-  not in the tab list.
-- **Mob** — any vanilla creature, owned by Cast from spawn. Villagers and the
-  other brain-driven mobs have their behaviours removed every second; every
-  body gets look-at-player goals, invulnerability, a name, and never opens its
-  own screen (a villager NPC does not trade).
+NPCs a vanilla client can see, for other mods to give roles to. Cast has no
+quests, no dialogue and no scenes of its own; it makes people and creatures
+that stand where you put them, look at you, wear what you dress them in, and
+do whatever the mod that placed them says when right-clicked.
 
 Depends on nothing. [Chronicler](https://github.com/Sablednah/Chronicler)
-uses it for quest givers; [LegendQuest StoryTeller](https://github.com/Sablednah/LegendQuest-StoryTeller)
-uses it for its cast. Server-side only; vanilla clients see everything.
+uses it for quest givers; [LegendQuest StoryTeller](https://github.com/Sablednah/LegendQuest-ReForged)
+possesses them for live scenes. Server-side only; vanilla clients see
+everything. The store page is [CURSEFORGE.md](CURSEFORGE.md).
 
-<<<<<<< HEAD
-**Status: 0.1.0 (unreleased).** Built 2026-09-07 and play-tested the same
-day: a human with a real skin renders on a vanilla-protocol client and turns
-to follow you; villager and cow bodies stand and look. StoryTeller possesses
-both kinds.
-=======
-**Status: 1.0.0.** Play-tested on a vanilla-protocol client: humans with real
-skins, villager and cow bodies, possession, dressing, gravity, the lot; driven
-end to end on a second machine by keystroke. Self-tested headlessly (94 checks)
-on all three Minecraft lines.
+**Status: 1.1.0.** Play-tested on a vanilla-protocol client: humans with real
+skins, villager and cow bodies, possession, dressing, gravity, following,
+lurking, exposure and provoke, the lot; driven end to end on a second machine
+by keystroke. Self-tested headlessly (131 checks) on all three Minecraft lines.
 
 ## Two kinds of body
 
@@ -56,7 +46,31 @@ keeps one exactly where it was put with nothing underneath.
 item written as `/give` takes it (`minecraft:leather_chestplate[dyed_color=16777215]`);
 blank clears. Sent to phantom viewers, set on bodies, remembered across
 restarts. A wrong slot or item is refused with the NPC named and the reason.
->>>>>>> 307a345 (Cast 1.0.0)
+
+## Moving
+
+**Following** walks the trail the leader actually walked -- through the door they
+used, down the stairs they took -- so a phantom with no navigation never tries a
+wall. It stops a couple of blocks short, speeds up when it has fallen well behind,
+and past `motion.followTeleport` blocks appears a few steps back along the trail.
+A follow is **leased**: whoever asked renews it, and when renewals stop the NPC
+stops and is anchored where it stands. `/cast follow` (five minutes) and
+`/cast follow stop` try it by hand. **Walking** (`Cast.walkTo`) goes to a point and
+stands there: a phantom in a straight line that climbs a block and passes through
+anything taller, a mob body on its own legs; either is put there after a minute.
+
+**Hits.** NPCs take no damage, but a blow on one -- a monster's swing, an arrow, a
+player's punch -- fires `NpcHitEvent` (one per half second at most). Nothing hunts an
+NPC on its own; `Cast.expose(server, npc, leaseTicks)` makes one worth attacking:
+monsters within `motion.lureRadius` are set on it once a second while the lease is
+renewed, and called off when it lapses. Chronicler's escorts that can fail use this.
+
+**Lurking** is the caged zombie in the basement. Put the NPC at the back of the
+cell, stand at the door and run `/cast lurk door`: it hides where it stands, groans
+now and then while someone is within `radius` (8), and roughly every `every`
+seconds (20, randomised) while someone is, rushes the door, hammers on it three
+times and slinks back into the dark. `/cast lurk radius <blocks>`, `every <seconds>`,
+`scare` (now), `off`. Saved with the NPC.
 
 ## Commands (`cast.admin` or op level 2)
 
@@ -64,9 +78,11 @@ restarts. A wrong slot or item is refused with the NPC named and the reason.
 |---|---|
 | `/cast spawn human "<name>" [skinAccount]` | a human where you are looking |
 | `/cast spawn mob <entity> "<name>"` | a creature where you are looking |
-| `/cast remove` / `name <text>` / `skin <account>` / `look <bool>` / `here` / `say <text>` | act on the NPC you look at, or the nearest |
+| `/cast remove` / `name <text>` / `skin <account>` / `look <bool>` / `here` / `say <text>` / `equip <slot> [item]` / `defygravity <bool>` | act on the NPC you look at, or the nearest |
 | `/cast role add\|remove <id>` | give the NPC a role another mod registered |
-| `/cast list` / `status` | what exists |
+| `/cast follow` / `follow stop` | follow you for five minutes, or stop |
+| `/cast lurk door [pos]` / `radius <blocks>` / `every <seconds>` / `scare` / `off` | the lurker: hides where it stands, rushes the door (where you stand) |
+| `/cast list` / `status` | what exists, and which build this is |
 
 Names may have spaces (quote them). A human's name tag shows the first 16
 characters. Skins are fetched from Mojang once and cached; a fetch that fails
@@ -77,31 +93,39 @@ leaves the default skin and the NPC still stands.
 Import `com.sablednah.cast.api` from one guarded class behind a
 `ModList.isLoaded("cast")` check. `Cast.registerRole(id, handler)` makes a
 right-click on an NPC carrying that role call you. `Cast.spawnHuman`,
-`spawnMob`, `remove` (idempotent, works unloaded), `byId`, `npcAt(viewer, reach)`,
-`say`, `lookAt`, `drive` (a teleport), `setRolesEnabled(player, false)` to
-work on an NPC without talking to it, and `NpcRemovedEvent` on the game bus.
-Every mob body carries `cast:npc` in its persistent data, the public marker.
+`spawnMob`, `remove` (idempotent, works unloaded), `byId`, `all`, `npcAt(viewer, reach)`,
+`npcHitAt`, `say`, `lookAt`, `drive` (a teleport), `equip` / `equipment`,
+`setAnchored`, `setDefyGravity`, `rename`, `setRoles`, `pinViewer`,
+`follow(server, npc, leader, leaseTicks)` / `stopFollowing` / `leaderOf`, `walkTo`,
+`isMoving`, `setLurk` / `clearLurk` / `scare`, `expose` / `isExposed`, `NpcHitEvent`,
+`setRolesEnabled(player, false)` to work on an NPC without talking to it, and
+`NpcRemovedEvent` on the game bus. Every mob body carries `cast:npc` in its
+persistent data, the public marker. Gravity and anchoring are Cast's alone; a
+mod that wants a floating NPC asks for it rather than setting it.
 
-## Building
+## Config (`cast-common.toml`)
+
+`npcs.viewRange`, `npcs.lookRange`, `npcs.coyote`, `npcs.tabEntrySeconds`,
+`skins.fetchSkins`, `motion.walkSpeed`, `motion.rushSpeed`, `motion.followTeleport`,
+`motion.lurkGrowlChance`, `motion.lureRadius`.
+
+## Requirements and building
+
+| Minecraft | NeoForge | Java | branch |
+|---|---|---|---|
+| 1.21.11 | 21.11.42+ | 21 | `main` |
+| 26.1.2 | 26.1.2.95+ | 25 | `mc26.1` |
+| 26.2 | 26.2.0.72+ | 25 | `mc26.2` |
 
 ```bash
-export JAVA_HOME=/path/to/jdk21
-./gradlew build     # -> build/libs/cast-<version>+mc1.21.11.jar
+export JAVA_HOME=/path/to/jdk21     # jdk25 on the 26.x branches
+./gradlew build                     # -> build/libs/cast-<version>+mc<mc>.jar
+./gradlew runServer -Pselftest      # the headless self-test
 ```
+
+Every jar carries a build stamp (`/cast status`, the startup log line, the
+manifest's `Build-Commit`), so two jars with the same name can be told apart.
 
 ## Licence
 
 MIT.
-
-
-## Gravity
-
-NPCs obey gravity: with nothing under their feet they drop to the ground once a second and their anchor follows them down, phantom or body alike. First, though, they look down, then back up at you, and only then fall (`npcs.coyote`; two seconds of dawning realisation, Wile E. Coyote style). `/cast defygravity true` (or `Cast.setDefyGravity`) keeps one exactly where it was put with nothing underneath. Named for the laugh, kept for the use.
-
-## The tab list and command suggestions
-
-A phantom is announced to each client as a player so it renders with its skin. That entry never shows in the tab list, but it would put the name in command suggestions (`/tp`, beside `@a`); so it is withdrawn `npcs.tabEntrySeconds` (default 2) after the phantom appears, once the client has the skin. 0 keeps it.
-
-## Dressing
-
-`/cast equip <slot> <item>` dresses the NPC you are looking at (mainhand, offhand, head, chest, legs, feet; the item written as `/give` takes it, blank to clear). Vanilla clients see it on phantoms and bodies alike, and it survives restarts. From code: `Cast.equip(server, id, slot, item)` and `Cast.equipment(server, id)`.
