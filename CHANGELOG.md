@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (1.1.0)
+## 1.1.0 — 2026-09-21
 
 - Fix: exposed NPCs were flatly ignored by monsters in play -- `setTarget` from outside the AI loses to the mob's own targeting goal re-evaluating and clearing it. Now a real goal in the mob's own target selector, arbitrated the same way as its other targeting goals.
 - **Provoke**: a real hit on a monster currently after an exposed NPC turns it on the hitter for `motion.threatSeconds`, so a player can pull it off the NPC on purpose; it reverts to the NPC on its own once the window lapses with no further hit.
