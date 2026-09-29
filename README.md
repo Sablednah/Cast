@@ -116,6 +116,7 @@ mod that wants a floating NPC asks for it rather than setting it.
 | 1.21.11 | 21.11.42+ | 21 | `main` |
 | 26.1.2 | 26.1.2.95+ | 25 | `mc26.1` |
 | 26.2 | 26.2.0.72+ | 25 | `mc26.2` |
+| 26.3 | 26.3.0.33-beta+ | 25 | `mc26.3` |
 
 ```bash
 export JAVA_HOME=/path/to/jdk21     # jdk25 on the 26.x branches
