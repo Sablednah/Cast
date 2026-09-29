@@ -13,7 +13,6 @@ import com.sablednah.cast.core.NpcSpec;
 
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
-import net.minecraft.network.protocol.game.ClientboundAnimatePacket;
 import net.minecraft.network.protocol.game.ClientboundEntityPositionSyncPacket;
 import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket;
@@ -105,8 +104,10 @@ public final class Phantoms {
      * through the same per-viewer push every other piece of its state already goes through.
      */
     public static void broadcastSwing(ServerLevel level, HumanNpc npc, InteractionHand hand) {
-        int action = hand == InteractionHand.OFF_HAND ? ClientboundAnimatePacket.SWING_OFF_HAND : ClientboundAnimatePacket.SWING_MAIN_HAND;
-        for (ServerPlayer p : viewersOf(level, npc)) send(p, new ClientboundAnimatePacket(npc, action));
+        // 26.3: swings left ClientboundAnimatePacket for their own packet, carrying the hand and an animation.
+        for (ServerPlayer p : viewersOf(level, npc))
+            send(p, new net.minecraft.network.protocol.game.ClientboundSwingAnimationPacket(npc, hand,
+                    net.minecraft.world.item.component.SwingAnimation.DEFAULT));
     }
 
     /** Player-info entries to withdraw: viewer -> npc -> the game time it is due. */
@@ -224,8 +225,8 @@ public final class Phantoms {
         byte pitch = toByte(npc.getXRot());
         for (ServerPlayer p : viewersOf(level, npc)) {
             if (relative) {
-                send(p, new ClientboundMoveEntityPacket.PosRot(npc.getId(),
-                        (short) Math.round(dx * 4096), (short) Math.round(dy * 4096), (short) Math.round(dz * 4096),
+                send(p, new ClientboundMoveEntityPacket.PosRot(npc.getId(), new net.minecraft.network.protocol.game.VecDelta.Linear(
+                        (short) Math.round(dx * 4096), (short) Math.round(dy * 4096), (short) Math.round(dz * 4096)),
                         yaw, pitch, true));
             } else {
                 send(p, ClientboundEntityPositionSyncPacket.of(npc));

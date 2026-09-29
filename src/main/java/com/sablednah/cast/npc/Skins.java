@@ -4,7 +4,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import com.mojang.authlib.properties.Property;
-import com.mojang.authlib.yggdrasil.ProfileResult;
+import com.mojang.authlib.services.ProfileResult;
 import com.sablednah.cast.CastConfig;
 import com.sablednah.cast.CastMod;
 import com.sablednah.cast.core.NpcStore;

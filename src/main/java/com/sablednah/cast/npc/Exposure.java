@@ -66,7 +66,7 @@ public final class Exposure {
             ServerLevel level = Npcs.levelOf(server, spec);
             Entity body = entity(level, spec);
             if (level == null) return;
-            if (body instanceof LivingEntity le) le.setInvulnerable(true);
+            if (body instanceof LivingEntity le) le.setPermanentlyInvulnerable(true);
             // Called off: leaving the goal attached would just have it re-aim at nothing next tick.
             if (body != null) detachAllAiming(body);
         });
@@ -97,7 +97,7 @@ public final class Exposure {
         // not merely leaving it undamaged: a HumanNpc (a FakePlayer, invulnerable from the moment it is
         // built, same as every FakePlayer) was never a Mob, so this used to only ever clear a body's flag
         // and left every human-kind exposed NPC untargetable on those versions.
-        if (target.isInvulnerable()) target.setInvulnerable(false);
+        if (target.isPermanentlyInvulnerable()) target.setPermanentlyInvulnerable(false);
         double r = CastConfig.LURE_RADIUS.get();
         int n = 0;
         for (Mob m : level.getEntitiesOfClass(Mob.class, new AABB(target.blockPosition()).inflate(r),

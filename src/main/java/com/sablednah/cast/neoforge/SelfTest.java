@@ -105,7 +105,7 @@ public final class SelfTest {
             check("villager body exists", v.flatMap(Npc::entity).isPresent());
             check("villager body carries the public marker", v.flatMap(Npc::entity).map(e -> Cast.isNpc(e) && Cast.npcIdOf(e).map(villager::equals).orElse(false)).orElse(false));
             check("villager brain has no behaviours", v.flatMap(Npc::entity).map(e -> ((Mob) e).getBrain().getRunningBehaviors().isEmpty()).orElse(false));
-            check("villager is invulnerable", v.flatMap(Npc::entity).map(e -> e.isInvulnerable()).orElse(false));
+            check("villager is invulnerable", v.flatMap(Npc::entity).map(e -> e.isPermanentlyInvulnerable()).orElse(false));
             Optional<Npc> z = Cast.byId(server, zombie);
             check("zombie body exists and is ours", z.flatMap(Npc::entity).map(Cast::isNpc).orElse(false));
             // Anchoring: a shoved body goes home; a possessed one is left where its wearer walks it.
@@ -362,7 +362,7 @@ public final class SelfTest {
                     check("expose: a known NPC can be exposed", Cast.expose(server, zombie, 40) && Cast.isExposed(zombie));
                     check("expose: an unknown one cannot", !Cast.expose(server, UUID.randomUUID(), 40));
                     com.sablednah.cast.npc.Exposure.tick(server);
-                    check("expose: an exposed body can be struck (no longer invulnerable to the event)", !zb2.isInvulnerable());
+                    check("expose: an exposed body can be struck (no longer invulnerable to the event)", !zb2.isPermanentlyInvulnerable());
                     // A goal in the target selector, not a bare setTarget: it only takes effect once the
                     // selector itself runs it (real play, on the mob's own next AI tick), same as any
                     // other TargetGoal -- proving the fix actually rides the framework rather than
@@ -397,7 +397,7 @@ public final class SelfTest {
                     // Provoked: hitting the monster while it is after an NPC turns it on the hitter instead --
                     // priority the other way round from an exposed NPC, which is meant to be a magnet, not a wall.
                     var stranger = new FakePlayer(level, new GameProfile(UUID.nameUUIDFromBytes("cast:stranger".getBytes()), "CastStranger"));
-                    stranger.setInvulnerable(false); // a FakePlayer starts invulnerable (its own constructor); a real attacking player is not, and a Mob may not target one that is
+                    stranger.setPermanentlyInvulnerable(false); // a FakePlayer starts invulnerable (its own constructor); a real attacking player is not, and a Mob may not target one that is
                     stranger.snapTo(hostile.getX() + 1, hostile.getY(), hostile.getZ(), 0F, 0F);
                     check("provoke: before any hit, still after the NPC", hostile.getTarget() == zb2);
                     com.sablednah.cast.npc.Exposure.provoke(hostile, stranger);
@@ -414,7 +414,7 @@ public final class SelfTest {
                     stranger.discard();
                     com.sablednah.cast.npc.Exposure.cover(server, zombie);
                     Npcs.tick(server);
-                    check("expose: covered, the body is invulnerable again", !Cast.isExposed(zombie) && zb2.isInvulnerable());
+                    check("expose: covered, the body is invulnerable again", !Cast.isExposed(zombie) && zb2.isPermanentlyInvulnerable());
                     check("expose: covered, the goal is detached, not left to re-aim itself at nothing",
                             com.sablednah.cast.npc.Exposure.attachedCount() == 0);
                     hostile.targetSelector.tick();

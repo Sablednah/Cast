@@ -55,7 +55,7 @@ public final class Bodies {
         mob.setCustomNameVisible(true);
         mob.setPersistenceRequired();
         Equipment.apply(mob, spec);
-        mob.setInvulnerable(true);
+        mob.setPermanentlyInvulnerable(true);
         mob.setNoAi(false);
         var kb = mob.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.KNOCKBACK_RESISTANCE);
         if (kb != null) kb.setBaseValue(1.0D);
@@ -88,7 +88,7 @@ public final class Bodies {
     public static void maintain(Mob mob, NpcSpec spec, boolean anchored, java.util.function.Consumer<net.minecraft.world.phys.Vec3> adopt) {
         Brains.neutralise(mob);
         // Exposed bodies stay vulnerable to the damage EVENT (which Cast cancels), so their hits can be seen.
-        if (!mob.isInvulnerable() && !Exposure.isExposed(spec.id())) mob.setInvulnerable(true);
+        if (!mob.isPermanentlyInvulnerable() && !Exposure.isExposed(spec.id())) mob.setPermanentlyInvulnerable(true);
         // An anchored body is held up by us, not by the ground, so the gag can play before it drops;
         // let go (possessed, walked about) and vanilla gravity is back.
         if (!anchored) { mob.setNoGravity(false); Gravity.settle(spec.id()); return; }

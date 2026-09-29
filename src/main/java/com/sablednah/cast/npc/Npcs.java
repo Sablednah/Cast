@@ -457,7 +457,7 @@ public final class Npcs {
             Phantoms.broadcastSwing(level, human, hand);
             return true;
         }
-        return body(level, spec).map(m -> { m.swing(hand, true); return true; }).orElse(false);
+        return body(level, spec).map(m -> { m.swing(hand, net.minecraft.world.item.component.SwingAnimation.DEFAULT, true); return true; }).orElse(false);
     }
 
     public static void setSkin(MinecraftServer server, UUID npcId, Optional<String> skin) {
