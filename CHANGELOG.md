@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.1 — 2026-09-29
+
+- **Minecraft 26.3** (NeoForge 26.3.0.33-beta or newer). Swings go out on 26.3's own swing packet and walking on its new movement delta; the "cannot be hurt" flag Cast sets is read as exactly that, since 26.3's plain invulnerability check is also true for a moment after every hit. No API change; StoryTeller and Chronicler build against it unchanged. Checked in a real 26.3 client.
+
 ## 1.1.0 — 2026-09-21
 
 - Fix: exposed NPCs were flatly ignored by monsters in play -- `setTarget` from outside the AI loses to the mob's own targeting goal re-evaluating and clearing it. Now a real goal in the mob's own target selector, arbitrated the same way as its other targeting goals.
