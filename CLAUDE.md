@@ -131,11 +131,12 @@ absent, never a failure. Same filename, different bytes, is the trap it answers.
 heading, the README status line, then commit main, cherry-pick the version commit to `mc26.1`
 and `mc26.2`, build a jar per branch with the right JDK, tag `v<version>` on main, and
 `gh release create` with all three jars attached. Publishing the GitHub release fires
-`.github/workflows/curseforge.yml` and `modrinth.yml`; both upload every attached `cast-*.jar`
-with the Minecraft version read from the `+mc` filename tag, and both skip cleanly until
-`CURSEFORGE_TOKEN` / `CURSEFORGE_PROJECT_ID` / `MODRINTH_TOKEN` / `MODRINTH_PROJECT_ID` exist.
+`.github/workflows/curseforge.yml`, which uploads every attached `cast-*.jar` with the
+Minecraft version read from the `+mc` filename tag, and skips cleanly until
+`CURSEFORGE_TOKEN` / `CURSEFORGE_PROJECT_ID` exist. Modrinth is dropped (2026-09-29: it
+refused every one of Sable's projects as AI content); CurseForge is the one store.
 Never handle the tokens. `CURSEFORGE.md` is the store page; `docs/` holds the artwork
-(`icon-256.png` for Modrinth's 256 KiB cap) and screenshots. 1.0.0 shipped 2026-09-12.
+and screenshots. 1.0.0 shipped 2026-09-12.
 
 **A CurseForge project's file list is its identity to every other mod.** The app resolves a
 required dependency to the dependency project's newest APPROVED file for that Minecraft version
@@ -187,4 +188,4 @@ uploads `cast-*.jar` only; attach anything else to the GitHub release alone.
 
 ## Artwork
 
-Artwork lives in `docs/`: `wordmark-850.png` (CurseForge caps description images at 850 wide; the store page and README use it), `wordmark.png` (full size), `icon.png` (1254 square), `icon-512.png` and `icon-256.png` (Modrinth rejects icons over 256 KiB; the 256 is under it).
+Artwork lives in `docs/`: `wordmark-850.png` (CurseForge caps description images at 850 wide; the store page and README use it), `wordmark.png` (full size), `icon.png` (1254 square), `icon-512.png` and `icon-256.png`.
