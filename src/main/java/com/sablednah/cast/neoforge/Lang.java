@@ -42,6 +42,8 @@ public final class Lang {
         def("msg.list.none", "{prefix}&7No NPCs yet. /cast spawn human <name> [skin] puts one where you look.");
         def("msg.skin", "{prefix}&7Skin of &f{account}&7 requested for &f{name}&7; it lands when Mojang answers.");
         def("msg.skin.off", "{prefix}&7Skin fetching is off in config/cast; the NPC keeps the default skin.");
+        def("msg.skin.shipped", "{prefix}&f{name}&7 now wears &f{account}&7.");
+        def("msg.skin.shipped.missing", "{prefix}&7No skin &f{account}&7 is shipped. A datapack adds it as &fdata/<ns>/cast/skin/<name>.json&7 (value and signature, as MineSkin gives them), then a restart; &f{name}&7 keeps the default skin until then.");
         def("msg.named", "{prefix}&7Renamed to &f{name}&7.");
         def("msg.equip.done", "{prefix}&7{name} now has &f{item}&7 in {slot}.");
         def("msg.equip.cleared", "{prefix}&7{name}'s {slot} is empty.");
