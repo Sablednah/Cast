@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- **Shipped skins**: a skin named `<ns>:<name>` comes from a datapack's `data/<ns>/cast/skin/<name>.json` (`value` and `signature`, as MineSkin gives them) -- no account that could change its skin, no network, works offline. Everything that takes a skin takes one: `/cast skin`, `/cast spawn human`, Chronicler NPC givers and mini-quest persons. A missing one keeps the default skin and says, once, where the file should be. `Cast.registerSkin(id, value, signature)` ships one from code. For ZARP's five named NPCs.
+- `/cast skin` and `/cast spawn human`'s skin take `zarp:okafor` (they were `word()`, which refuses the colon).
+
 ## 1.1.1 — 2026-09-29
 
 - **Minecraft 26.3** (NeoForge 26.3.0.33-beta or newer). Swings go out on 26.3's own swing packet and walking on its new movement delta; the "cannot be hurt" flag Cast sets is read as exactly that, since 26.3's plain invulnerability check is also true for a moment after every hit. No API change; StoryTeller and Chronicler build against it unchanged. Checked in a real 26.3 client.

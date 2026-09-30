@@ -34,6 +34,7 @@ public class CastMod {
     public CastMod(IEventBus modEventBus, ModContainer modContainer) {
         LOGGER.info("Cast {} initialising", BuildInfo.describe());
         modContainer.registerConfig(ModConfig.Type.COMMON, CastConfig.SPEC);
+        modEventBus.addListener(CastRegistries::register);
         NeoForge.EVENT_BUS.register(CastEvents.class);
         NeoForge.EVENT_BUS.register(CastPermissions.class);
         NeoForge.EVENT_BUS.addListener((RegisterCommandsEvent event) ->

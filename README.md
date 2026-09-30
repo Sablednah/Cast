@@ -88,6 +88,16 @@ Names may have spaces (quote them). A human's name tag shows the first 16
 characters. Skins are fetched from Mojang once and cached; a fetch that fails
 leaves the default skin and the NPC still stands.
 
+**Shipped skins, no account.** A skin written `<ns>:<name>` (`zarp:okafor`) is
+not an account: it comes from a datapack's `data/<ns>/cast/skin/<name>.json`,
+`{"value": "...", "signature": "..."}` -- exactly what
+[MineSkin](https://mineskin.org) returns for an uploaded PNG. Signed by Mojang
+and permanent, so it never changes under you and needs no network. Anything
+that names a skin takes one (`/cast skin zarp:okafor`, a Chronicler NPC giver or
+mini-quest person). A new file needs a restart; one that is missing is said
+once in the log, naming the path it should be at. Mods can ship one from code
+with `Cast.registerSkin(id, value, signature)`; a datapack's file of the same id wins.
+
 ## For other mods
 
 Import `com.sablednah.cast.api` from one guarded class behind a

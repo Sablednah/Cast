@@ -98,6 +98,33 @@ public final class SelfTest {
             Npcs.setSkin(server, human, Optional.of("selftestskin"));
             check("cached skin lands on the phantom profile", Cast.byId(server, human).flatMap(Npc::entity)
                     .map(e -> ((HumanNpc) e).getGameProfile().properties().containsKey("textures")).orElse(false));
+            // Shipped skins: "<ns>:<name>" from data/<ns>/cast/skin/<name>.json or Cast.registerSkin -- no account, no fetch.
+            var skinJson = com.google.gson.JsonParser.parseString("{\"value\": \"dGVzdDI=\", \"signature\": \"c2lnMg==\"}");
+            check("shipped skin: the file format parses", com.sablednah.cast.npc.Skins.DataSkin.CODEC
+                    .parse(com.mojang.serialization.JsonOps.INSTANCE, skinJson).result().map(d -> d.value().equals("dGVzdDI=")).orElse(false));
+            check("shipped skin: a file with no signature is refused", com.sablednah.cast.npc.Skins.DataSkin.CODEC
+                    .parse(com.mojang.serialization.JsonOps.INSTANCE, com.google.gson.JsonParser.parseString("{\"value\": \"eA==\"}")).error().isPresent());
+            Cast.registerSkin(Identifier.parse("selftest:doctor"), "dGVzdDI=", "c2lnMg==");
+            Npcs.setSkin(server, human, Optional.of("selftest:doctor"));
+            check("shipped skin: a namespaced skin lands on the phantom profile", Cast.byId(server, human).flatMap(Npc::entity)
+                    .map(e -> ((HumanNpc) e).getGameProfile().properties().get("textures").stream()
+                            .anyMatch(pr -> pr.value().equals("dGVzdDI=") && "c2lnMg==".equals(pr.signature()))).orElse(false));
+            Npcs.setSkin(server, human, Optional.of("selftest:nobody"));
+            check("shipped skin: one nobody shipped leaves the default skin", Cast.byId(server, human).flatMap(Npc::entity)
+                    .map(e -> !((HumanNpc) e).getGameProfile().properties().containsKey("textures")).orElse(false));
+            check("shipped skin: ...and is never fetched or cached as an account", store.skin("selftest:nobody").isEmpty());
+            // The real datapack path, when the dev world carries the test pack (run/world/datapacks/cast-skin-selftest).
+            if (server.getPackRepository().getSelectedIds().contains("file/cast-skin-selftest")) {
+                check("shipped skin: a datapack's data/selftest/cast/skin/packdoctor.json is found by id",
+                        com.sablednah.cast.npc.Skins.resolve(server, store, "selftest:packdoctor").map(sk -> sk.value().equals("cGFja3NraW4=")).orElse(false));
+            } else {
+                CastMod.LOGGER.info("Cast SelfTest: no cast-skin-selftest datapack in this world -- the datapack skin path is not exercised");
+            }
+            check("shipped skin: a bare name is still an account", !com.sablednah.cast.npc.Skins.isShipped("selftestskin")
+                    && com.sablednah.cast.npc.Skins.resolve(server, store, "selftestskin").isPresent());
+            var skinParse = server.getCommands().getDispatcher().parse("cast skin zarp:okafor", server.createCommandSourceStack());
+            check("shipped skin: '/cast skin zarp:okafor' parses (not word())", skinParse.getExceptions().isEmpty() && !skinParse.getReader().canRead()
+                    && skinParse.getContext().getLastChild().getCommand() != null);
             Npcs.tick(server);
             check("human is not listed", h.flatMap(Npc::entity).map(e -> !((HumanNpc) e).allowsListing()).orElse(false));
 
