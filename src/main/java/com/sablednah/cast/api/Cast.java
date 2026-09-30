@@ -41,6 +41,15 @@ public final class Cast {
      * A creature NPC. Brain-driven bodies (villagers among them) are accepted:
      * their behaviours are removed every second and ordinary look goals added.
      */
+    /**
+     * Ship a signed skin from code: NPCs whose skin is {@code id} ("mymod:doctor") wear it, no
+     * account and no network. The same as a datapack's {@code data/<ns>/cast/skin/<name>.json}, which
+     * wins if both exist. {@code value} and {@code signature} are what MineSkin returns. Since 1.2.0.
+     */
+    public static void registerSkin(Identifier id, String value, String signature) {
+        com.sablednah.cast.npc.Skins.register(id, new com.sablednah.cast.npc.Skins.DataSkin(value, signature));
+    }
+
     public static UUID spawnMob(ServerLevel level, Vec3 pos, float yaw, Identifier entityType, String name, List<Identifier> roles) {
         return Npcs.spawnMob(level, pos, yaw, entityType, name, roles);
     }

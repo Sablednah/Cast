@@ -38,7 +38,7 @@ public final class HumanNpc extends FakePlayer {
         // authlib 9's GameProfile is immutable -- properties() cannot be put to (that was a
         // tick-loop crash in play), so the skin goes in through the constructor.
         GameProfile profile;
-        var skin = spec.skin().flatMap(store::skin);
+        var skin = spec.skin().flatMap(s -> Skins.resolve(level.getServer(), store, s));
         if (skin.isPresent()) {
             try {
                 profile = new GameProfile(profileId, spec.profileName(), new PropertyMap(ImmutableMultimap.of(
