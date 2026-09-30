@@ -82,6 +82,7 @@ times and slinks back into the dark. `/cast lurk radius <blocks>`, `every <secon
 | `/cast role add\|remove <id>` | give the NPC a role another mod registered |
 | `/cast follow` / `follow stop` | follow you for five minutes, or stop |
 | `/cast lurk door [pos]` / `radius <blocks>` / `every <seconds>` / `scare` / `off` | the lurker: hides where it stands, rushes the door (where you stand) |
+| `/cast scale <0.0625-16>` | resize the NPC you look at (vanilla's `minecraft:scale`: model, hitbox, eye height; 1 is ordinary) |
 | `/cast list` / `status` | what exists, and which build this is |
 
 Names may have spaces (quote them). A human's name tag shows the first 16
