@@ -32,7 +32,21 @@ import net.minecraft.world.phys.Vec3;
  */
 public record NpcSpec(UUID id, NpcKind kind, String name, Optional<String> skin, Optional<Identifier> entityType,
         Identifier dimension, Vec3 pos, float yaw, float pitch, List<Identifier> roles, boolean lookAtPlayers,
-        Optional<UUID> entityUuid, Map<String, String> equipment, boolean defyGravity, Optional<LurkSpec> lurk) {
+        Optional<UUID> entityUuid, Map<String, String> equipment, boolean defyGravity, Optional<LurkSpec> lurk, double scale) {
+
+    /** Vanilla's own range for {@code minecraft:scale}. */
+    public static final double MIN_SCALE = 0.0625D, MAX_SCALE = 16D;
+
+    public static double clampScale(double s) {
+        return Double.isNaN(s) ? 1D : Math.max(MIN_SCALE, Math.min(MAX_SCALE, s));
+    }
+
+    /** Canonical before {@code scale} (1.1.x): a record's canonical constructor is public API, so it stays. */
+    public NpcSpec(UUID id, NpcKind kind, String name, Optional<String> skin, Optional<Identifier> entityType,
+            Identifier dimension, Vec3 pos, float yaw, float pitch, List<Identifier> roles, boolean lookAtPlayers,
+            Optional<UUID> entityUuid, Map<String, String> equipment, boolean defyGravity, Optional<LurkSpec> lurk) {
+        this(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, equipment, defyGravity, lurk, 1D);
+    }
 
     /** The constructor every caller before lurking used: no lurk. */
     public NpcSpec(UUID id, NpcKind kind, String name, Optional<String> skin, Optional<Identifier> entityType,
@@ -60,43 +74,49 @@ public record NpcSpec(UUID id, NpcKind kind, String name, Optional<String> skin,
             UUIDUtil.CODEC.optionalFieldOf("entity_uuid").forGetter(NpcSpec::entityUuid),
             Codec.unboundedMap(Codec.STRING, Codec.STRING).optionalFieldOf("equipment", Map.of()).forGetter(NpcSpec::equipment),
             Codec.BOOL.optionalFieldOf("defy_gravity", false).forGetter(NpcSpec::defyGravity),
-            LurkSpec.CODEC.optionalFieldOf("lurk").forGetter(NpcSpec::lurk))
+            LurkSpec.CODEC.optionalFieldOf("lurk").forGetter(NpcSpec::lurk),
+            Codec.DOUBLE.optionalFieldOf("scale", 1D).forGetter(NpcSpec::scale))
             .apply(i, NpcSpec::new));
 
     public NpcSpec withName(String n) {
-        return new NpcSpec(id, kind, n, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, equipment, defyGravity, lurk);
+        return new NpcSpec(id, kind, n, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, equipment, defyGravity, lurk, scale);
     }
 
     public NpcSpec withSkin(Optional<String> s) {
-        return new NpcSpec(id, kind, name, s, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, equipment, defyGravity, lurk);
+        return new NpcSpec(id, kind, name, s, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, equipment, defyGravity, lurk, scale);
     }
 
     public NpcSpec withPose(Identifier dim, Vec3 p, float y, float x) {
-        return new NpcSpec(id, kind, name, skin, entityType, dim, p, y, x, roles, lookAtPlayers, entityUuid, equipment, defyGravity, lurk);
+        return new NpcSpec(id, kind, name, skin, entityType, dim, p, y, x, roles, lookAtPlayers, entityUuid, equipment, defyGravity, lurk, scale);
     }
 
     public NpcSpec withRoles(List<Identifier> r) {
-        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, r, lookAtPlayers, entityUuid, equipment, defyGravity, lurk);
+        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, r, lookAtPlayers, entityUuid, equipment, defyGravity, lurk, scale);
     }
 
     public NpcSpec withLook(boolean look) {
-        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, look, entityUuid, equipment, defyGravity, lurk);
+        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, look, entityUuid, equipment, defyGravity, lurk, scale);
     }
 
     public NpcSpec withEquipment(Map<String, String> e) {
-        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, e, defyGravity, lurk);
+        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, e, defyGravity, lurk, scale);
     }
 
     public NpcSpec withDefyGravity(boolean d) {
-        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, equipment, d, lurk);
+        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, equipment, d, lurk, scale);
     }
 
     public NpcSpec withLurk(Optional<LurkSpec> l) {
-        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, equipment, defyGravity, l);
+        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, equipment, defyGravity, l, scale);
+    }
+
+    /** {@code scale}: vanilla's {@code minecraft:scale} on the body -- model, hitbox, eye height, step. Clamped. */
+    public NpcSpec withScale(double sc) {
+        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, entityUuid, equipment, defyGravity, lurk, clampScale(sc));
     }
 
     public NpcSpec withEntityUuid(Optional<UUID> u) {
-        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, u, equipment, defyGravity, lurk);
+        return new NpcSpec(id, kind, name, skin, entityType, dimension, pos, yaw, pitch, roles, lookAtPlayers, u, equipment, defyGravity, lurk, scale);
     }
 
     /** The profile name a client will accept: at most 16 characters. */
