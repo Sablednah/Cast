@@ -43,7 +43,8 @@ public final class CastCommands {
                         .then(Commands.literal("human")
                                 .then(Commands.argument("name", StringArgumentType.string())
                                         .executes(ctx -> spawnHuman(ctx, Optional.empty()))
-                                        .then(Commands.argument("skin", StringArgumentType.word())
+                                        // greedy, not word(): a shipped skin is "zarp:okafor", and word() refuses the colon
+                                        .then(Commands.argument("skin", StringArgumentType.greedyString())
                                                 .executes(ctx -> spawnHuman(ctx, Optional.of(StringArgumentType.getString(ctx, "skin")))))))
                         .then(Commands.literal("mob")
                                 .then(Commands.argument("type", IdentifierArgument.id())
@@ -52,7 +53,7 @@ public final class CastCommands {
                 .then(Commands.literal("remove").executes(CastCommands::remove))
                 .then(Commands.literal("list").executes(CastCommands::list))
                 .then(Commands.literal("status").executes(CastCommands::status))
-                .then(Commands.literal("skin").then(Commands.argument("account", StringArgumentType.word()).executes(CastCommands::skin)))
+                .then(Commands.literal("skin").then(Commands.argument("account", StringArgumentType.greedyString()).executes(CastCommands::skin)))
                 .then(Commands.literal("name").then(Commands.argument("name", StringArgumentType.greedyString()).executes(CastCommands::rename)))
                 .then(Commands.literal("look").then(Commands.argument("on", BoolArgumentType.bool()).executes(CastCommands::look)))
                 .then(Commands.literal("defygravity").then(Commands.argument("on", BoolArgumentType.bool()).executes(CastCommands::defyGravity)))
@@ -189,8 +190,11 @@ public final class CastCommands {
         if (t.isEmpty()) return 0;
         String account = StringArgumentType.getString(ctx, "account");
         Npcs.setSkin(player.level().getServer(), t.get().id(), Optional.of(account));
-        Feedback.chat(player, Lang.get(com.sablednah.cast.CastConfig.FETCH_SKINS.get() ? "msg.skin" : "msg.skin.off")
-                .replace("{account}", account).replace("{name}", t.get().name()));
+        String key = com.sablednah.cast.npc.Skins.isShipped(account)
+                ? (com.sablednah.cast.npc.Skins.resolve(player.level().getServer(), com.sablednah.cast.core.NpcStore.get(player.level().getServer()), account).isPresent()
+                        ? "msg.skin.shipped" : "msg.skin.shipped.missing")
+                : com.sablednah.cast.CastConfig.FETCH_SKINS.get() ? "msg.skin" : "msg.skin.off";
+        Feedback.chat(player, Lang.get(key).replace("{account}", account).replace("{name}", t.get().name()));
         return 1;
     }
 
