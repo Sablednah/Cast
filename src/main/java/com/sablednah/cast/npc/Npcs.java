@@ -469,6 +469,18 @@ public final class Npcs {
         });
     }
 
+    /** Resize: stored, then a phantom is re-bodied (shown again, size and all) and a mob body resized in place. */
+    public static boolean setScale(MinecraftServer server, UUID npcId, double scale) {
+        NpcStore store = NpcStore.get(server);
+        var spec = store.get(npcId);
+        if (spec.isEmpty()) return false;
+        NpcSpec resized = spec.get().withScale(scale);
+        store.put(resized);
+        if (resized.kind() == NpcKind.HUMAN) rebody(server, npcId);
+        else cachedBody(npcId).ifPresent(m -> Scale.apply(m, resized.scale()));
+        return true;
+    }
+
     public static void setRoles(MinecraftServer server, UUID npcId, List<Identifier> roles) {
         NpcStore store = NpcStore.get(server);
         store.get(npcId).ifPresent(spec -> store.put(spec.withRoles(roles)));

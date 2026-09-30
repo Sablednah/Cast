@@ -42,6 +42,15 @@ public final class Cast {
      * their behaviours are removed every second and ordinary look goals added.
      */
     /**
+     * Make an NPC bigger or smaller: vanilla's {@code minecraft:scale} (clamped to its 0.0625-16),
+     * so model, hitbox, eye height and nameplate follow. 1 is ordinary. Kept with the NPC and
+     * re-applied to every new body. False if there is no such NPC. Since 1.2.0.
+     */
+    public static boolean setScale(MinecraftServer server, UUID npcId, double scale) {
+        return com.sablednah.cast.npc.Npcs.setScale(server, npcId, scale);
+    }
+
+    /**
      * Ship a signed skin from code: NPCs whose skin is {@code id} ("mymod:doctor") wear it, no
      * account and no network. The same as a datapack's {@code data/<ns>/cast/skin/<name>.json}, which
      * wins if both exist. {@code value} and {@code signature} are what MineSkin returns. Since 1.2.0.

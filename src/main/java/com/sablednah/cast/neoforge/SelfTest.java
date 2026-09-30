@@ -122,6 +122,32 @@ public final class SelfTest {
             }
             check("shipped skin: a bare name is still an account", !com.sablednah.cast.npc.Skins.isShipped("selftestskin")
                     && com.sablednah.cast.npc.Skins.resolve(server, store, "selftestskin").isPresent());
+            // Scale: vanilla's minecraft:scale on the body, kept on the spec and re-applied to every new body.
+            {
+                var SCALE = net.minecraft.world.entity.ai.attributes.Attributes.SCALE;
+                double plainHeight = Cast.byId(server, human).flatMap(Npc::entity).map(e -> e.getBbHeight()).orElse(0F);
+                check("scale: a human is resized", Cast.setScale(server, human, 1.2D) && Cast.byId(server, human).flatMap(Npc::entity)
+                        .map(e -> Math.abs(((HumanNpc) e).getAttribute(SCALE).getBaseValue() - 1.2D) < 1e-9).orElse(false));
+                check("scale: ...and its hitbox with it (what a click reaches, where it looks from)", Cast.byId(server, human).flatMap(Npc::entity)
+                        .map(e -> e.getBbHeight() > plainHeight * 1.15F).orElse(false));
+                check("scale: kept on the spec", store.get(human).map(sp -> sp.scale() == 1.2D).orElse(false));
+                check("scale: a mob body is resized in place", Cast.setScale(server, zombie, 0.85D) && Cast.byId(server, zombie).flatMap(Npc::entity)
+                        .map(e -> Math.abs(((Mob) e).getAttribute(SCALE).getBaseValue() - 0.85D) < 1e-9).orElse(false));
+                check("scale: clamped to vanilla's range", store.get(human).map(sp -> sp.withScale(100D).scale() == 16D && sp.withScale(0D).scale() == 0.0625D).orElse(false));
+                check("scale: an NPC that does not exist is refused", !Cast.setScale(server, UUID.randomUUID(), 1.1D));
+                check("scale: a spec saved before scale existed reads as 1", store.get(human).map(sp -> {
+                    var json = com.sablednah.cast.core.NpcSpec.CODEC.encodeStart(com.mojang.serialization.JsonOps.INSTANCE, sp).getOrThrow().getAsJsonObject();
+                    json.remove("scale");
+                    return com.sablednah.cast.core.NpcSpec.CODEC.parse(com.mojang.serialization.JsonOps.INSTANCE, json).result().map(o -> o.scale() == 1D).orElse(false);
+                }).orElse(false));
+                var dispatcher = server.getCommands().getDispatcher();
+                var ok = dispatcher.parse("cast scale 1.2", server.createCommandSourceStack());
+                check("scale: '/cast scale 1.2' parses", ok.getExceptions().isEmpty() && !ok.getReader().canRead() && ok.getContext().getLastChild().getCommand() != null);
+                var big = dispatcher.parse("cast scale 40", server.createCommandSourceStack());
+                check("scale: '/cast scale 40' is refused", !big.getExceptions().isEmpty() || big.getContext().getLastChild().getCommand() == null || big.getReader().canRead());
+                Cast.setScale(server, human, 1D);
+                Cast.setScale(server, zombie, 1D);
+            }
             var skinParse = server.getCommands().getDispatcher().parse("cast skin zarp:okafor", server.createCommandSourceStack());
             check("shipped skin: '/cast skin zarp:okafor' parses (not word())", skinParse.getExceptions().isEmpty() && !skinParse.getReader().canRead()
                     && skinParse.getContext().getLastChild().getCommand() != null);

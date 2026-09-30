@@ -51,6 +51,7 @@ public final class HumanNpc extends FakePlayer {
             profile = new GameProfile(profileId, spec.profileName());
         }
         HumanNpc npc = new HumanNpc(level, profile, spec.id());
+        Scale.apply(npc, spec.scale());
         npc.snapTo(spec.pos().x, spec.pos().y, spec.pos().z, spec.yaw(), spec.pitch());
         npc.setYHeadRot(spec.yaw());
         return npc;

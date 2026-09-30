@@ -86,6 +86,11 @@ public final class Phantoms {
             send(viewer, new ClientboundSetEntityDataPacket(npc.getId(), values));
         }
         send(viewer, new ClientboundRotateHeadPacket(npc, toByte(npc.getYHeadRot())));
+        // No tracker to sync attributes for a phantom: its size goes out here or never (a change re-bodies, and shows again).
+        var scale = npc.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.SCALE);
+        if (scale != null && scale.getBaseValue() != 1D) {
+            send(viewer, new net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket(npc.getId(), List.of(scale)));
+        }
         var worn = Equipment.worn(npc);
         if (!worn.isEmpty()) send(viewer, new net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket(npc.getId(), worn));
         scheduleUnlist(viewer, npc);

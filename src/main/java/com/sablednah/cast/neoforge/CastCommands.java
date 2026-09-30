@@ -55,6 +55,9 @@ public final class CastCommands {
                 .then(Commands.literal("status").executes(CastCommands::status))
                 .then(Commands.literal("skin").then(Commands.argument("account", StringArgumentType.greedyString()).executes(CastCommands::skin)))
                 .then(Commands.literal("name").then(Commands.argument("name", StringArgumentType.greedyString()).executes(CastCommands::rename)))
+                .then(Commands.literal("scale").then(Commands.argument("scale",
+                        com.mojang.brigadier.arguments.DoubleArgumentType.doubleArg(com.sablednah.cast.core.NpcSpec.MIN_SCALE, com.sablednah.cast.core.NpcSpec.MAX_SCALE))
+                        .executes(CastCommands::scale)))
                 .then(Commands.literal("look").then(Commands.argument("on", BoolArgumentType.bool()).executes(CastCommands::look)))
                 .then(Commands.literal("defygravity").then(Commands.argument("on", BoolArgumentType.bool()).executes(CastCommands::defyGravity)))
                 .then(Commands.literal("here").executes(CastCommands::here))
@@ -195,6 +198,16 @@ public final class CastCommands {
                         ? "msg.skin.shipped" : "msg.skin.shipped.missing")
                 : com.sablednah.cast.CastConfig.FETCH_SKINS.get() ? "msg.skin" : "msg.skin.off";
         Feedback.chat(player, Lang.get(key).replace("{account}", account).replace("{name}", t.get().name()));
+        return 1;
+    }
+
+    private static int scale(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
+        Optional<Npc> t = targetOrSay(player);
+        if (t.isEmpty()) return 0;
+        double scale = com.mojang.brigadier.arguments.DoubleArgumentType.getDouble(ctx, "scale");
+        Cast.setScale(player.level().getServer(), t.get().id(), scale);
+        Feedback.chat(player, Lang.fmt("msg.scale", "name", t.get().name(), "scale", String.format(java.util.Locale.ROOT, "%.2f", scale)));
         return 1;
     }
 

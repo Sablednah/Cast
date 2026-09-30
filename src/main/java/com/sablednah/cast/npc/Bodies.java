@@ -59,6 +59,7 @@ public final class Bodies {
         mob.setNoAi(false);
         var kb = mob.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.KNOCKBACK_RESISTANCE);
         if (kb != null) kb.setBaseValue(1.0D);
+        Scale.apply(mob, spec.scale());
         // Ours from here: clear whatever the body was born with, then the idle set.
         mob.goalSelector.removeAllGoals(g -> true);
         mob.targetSelector.removeAllGoals(g -> true);
@@ -87,6 +88,7 @@ public final class Bodies {
      */
     public static void maintain(Mob mob, NpcSpec spec, boolean anchored, java.util.function.Consumer<net.minecraft.world.phys.Vec3> adopt) {
         Brains.neutralise(mob);
+        Scale.apply(mob, spec.scale()); // a live /cast scale lands here within the second, via the ordinary tracker
         // Exposed bodies stay vulnerable to the damage EVENT (which Cast cancels), so their hits can be seen.
         if (!mob.isPermanentlyInvulnerable() && !Exposure.isExposed(spec.id())) mob.setPermanentlyInvulnerable(true);
         // An anchored body is held up by us, not by the ground, so the gag can play before it drops;
