@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.2.0 — 2026-09-30
 
 - **Scale**: an NPC can be bigger or smaller -- vanilla's `minecraft:scale` (0.0625 to 16), so model, hitbox, eye height and nameplate all follow, on human and mob bodies alike. `/cast scale <n>`, `Cast.setScale(server, npc, scale)`, kept with the NPC. A phantom now sends its size to each viewer, which it never had a way to before. For ZARP's towering Sarge and small Kit.
 - **Shipped skins**: a skin named `<ns>:<name>` comes from a datapack's `data/<ns>/cast/skin/<name>.json` (`value` and `signature`, as MineSkin gives them) -- no account that could change its skin, no network, works offline. Everything that takes a skin takes one: `/cast skin`, `/cast spawn human`, Chronicler NPC givers and mini-quest persons. A missing one keeps the default skin and says, once, where the file should be. `Cast.registerSkin(id, value, signature)` ships one from code. For ZARP's five named NPCs.
