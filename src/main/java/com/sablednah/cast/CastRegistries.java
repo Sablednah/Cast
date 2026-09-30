@@ -5,7 +5,7 @@ import com.sablednah.cast.npc.Skins;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.neoforged.neoforge.registries.DataPackRegistryEvent;
+import net.neoforged.neoforge.registries.NewDatapackRegistryEvent;
 
 /**
  * Cast's datapack registries. One so far: {@code cast:skin}, signed skins a datapack ships as
@@ -18,9 +18,9 @@ public final class CastRegistries {
     public static final ResourceKey<Registry<Skins.DataSkin>> SKIN =
             ResourceKey.createRegistryKey(Identifier.fromNamespaceAndPath(CastMod.MODID, "skin"));
 
-    static void register(DataPackRegistryEvent.NewRegistry event) {
+    static void register(NewDatapackRegistryEvent event) {
         // No network codec: the client never needs the registry -- the phantom's profile carries the texture.
-        event.dataPackRegistry(SKIN, Skins.DataSkin.CODEC);
+        event.worldRegistry(SKIN, Skins.DataSkin.CODEC);
     }
 
     private CastRegistries() {}
