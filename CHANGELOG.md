@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.1 — 2026-10-01
+
+- **Minecraft 26.3 only** -- the other lines are unchanged and stay on 1.2.0. NeoForge 26.3.0.37-beta and later rename the config types this jar registers (`COMMON` became `LOCAL`), so 1.2.0 crashes on them with `NoSuchFieldError`. This build declares NeoForge **26.3.0.33-beta up to, not including, 26.3.0.37-beta**, so a newer beta now refuses it with a version message instead. Stay on NeoForge 26.3.0.36-beta or earlier until NeoForge 26.3 is stable and the rename is ported.
+
 ## 1.2.0 — 2026-09-30
 
 - **Scale**: an NPC can be bigger or smaller -- vanilla's `minecraft:scale` (0.0625 to 16), so model, hitbox, eye height and nameplate all follow, on human and mob bodies alike. `/cast scale <n>`, `Cast.setScale(server, npc, scale)`, kept with the NPC. A phantom now sends its size to each viewer, which it never had a way to before. For ZARP's towering Sarge and small Kit.
