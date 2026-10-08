@@ -30,6 +30,28 @@ public final class HumanNpc extends FakePlayer {
     private HumanNpc(ServerLevel level, GameProfile profile, UUID npcId) {
         super(level, profile);
         this.npcId = npcId;
+        // Every outer skin layer (hat, jacket, sleeves, trousers) on. The CLIENT draws a phantom as an ordinary
+        // remote player and reads this synced byte, whose default is 0 -- all layers off. Overriding
+        // isModelPartShown only ever lied to the server: in play Sarge lost his beard (it is on the hat layer),
+        // Okafor her glasses. Set here it is a non-default value, so show()'s entity-data packet carries it.
+        getEntityData().set(DATA_PLAYER_MODE_CUSTOMISATION, ALL_LAYERS);
+    }
+
+    /** Every {@link net.minecraft.world.entity.player.PlayerModelPart}'s mask, from the enum rather than a magic 0x7F. */
+    private static final byte ALL_LAYERS;
+    static {
+        int mask = 0;
+        for (var part : net.minecraft.world.entity.player.PlayerModelPart.values()) mask |= part.getMask();
+        ALL_LAYERS = (byte) mask;
+    }
+
+    /** For the self-test: the synced byte a client reads to decide which skin layers to draw. */
+    public static net.minecraft.network.syncher.EntityDataAccessor<Byte> skinLayersData() {
+        return DATA_PLAYER_MODE_CUSTOMISATION;
+    }
+
+    public static byte allLayers() {
+        return ALL_LAYERS;
     }
 
     public static HumanNpc create(ServerLevel level, NpcSpec spec, NpcStore store) {
@@ -73,9 +95,4 @@ public final class HumanNpc extends FakePlayer {
         return false;
     }
 
-    /** Every skin layer on: without this a phantom is hatless and sleeveless. */
-    @Override
-    public boolean isModelPartShown(net.minecraft.world.entity.player.PlayerModelPart part) {
-        return true;
-    }
 }
