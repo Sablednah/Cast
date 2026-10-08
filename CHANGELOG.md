@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Fix: human NPCs were drawn without their outer skin layer -- no hat, jacket, sleeves or trouser layer, so a beard, glasses, a hood or goggles painted there were missing (Sarge, shaved; Okafor, no glasses). Clients read which layers to draw from a synced byte Cast never set, and its default is "none"; a server-side override only ever convinced the server. Every layer is now on, and sent to each viewer with the rest of the NPC.
+
 ## 1.2.1 — 2026-10-01
 
 - **Minecraft 26.3 only** -- the other lines are unchanged and stay on 1.2.0. NeoForge 26.3.0.37-beta and later rename the config types this jar registers (`COMMON` became `LOCAL`), so 1.2.0 crashes on them with `NoSuchFieldError`. This build declares NeoForge **26.3.0.33-beta up to, not including, 26.3.0.37-beta**, so a newer beta now refuses it with a version message instead. Stay on NeoForge 26.3.0.36-beta or earlier until NeoForge 26.3 is stable and the rename is ported.
