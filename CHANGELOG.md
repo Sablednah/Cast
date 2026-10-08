@@ -1,7 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.2.2 — 2026-10-08
 
+- **Minecraft 26.3 on NeoForge 26.3.0.58-beta or newer** (it was capped below .37-beta, where NeoForge renamed the config types). Your settings stay in `cast-common.toml`: the new type would otherwise have named the file `cast-local.toml` and started every server on defaults. 26.3.0.36-beta and earlier stay on 1.2.1.
 - Fix: human NPCs were drawn without their outer skin layer -- no hat, jacket, sleeves or trouser layer, so a beard, glasses, a hood or goggles painted there were missing (Sarge, shaved; Okafor, no glasses). Clients read which layers to draw from a synced byte Cast never set, and its default is "none"; a server-side override only ever convinced the server. Every layer is now on, and sent to each viewer with the rest of the NPC.
 
 ## 1.2.1 — 2026-10-01
