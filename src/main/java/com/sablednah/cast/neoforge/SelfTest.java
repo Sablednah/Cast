@@ -92,6 +92,15 @@ public final class SelfTest {
             check("human handle: loaded, is human", h.map(n -> n.loaded() && n.isHuman()).orElse(false));
             check("human handle: entity is a phantom player, not in a level's entity list",
                     h.flatMap(Npc::entity).map(e -> e instanceof HumanNpc && level.getEntity(e.getUUID()) == null).orElse(false));
+            // The outer skin layer (beards, glasses, hoods) is drawn by the CLIENT from a synced byte; it must be
+            // non-default, or show()'s entity-data packet leaves it out and every viewer sees all layers off.
+            check("human: every skin layer is on, in the data a viewer is sent", h.flatMap(Npc::entity).map(e -> {
+                var values = ((HumanNpc) e).getEntityData().getNonDefaultValues();
+                return values != null && values.stream().anyMatch(dv -> dv.id() == HumanNpc.skinLayersData().id()
+                        && Byte.valueOf(HumanNpc.allLayers()).equals(dv.value()));
+            }).orElse(false));
+            check("human: ...and the model agrees, hat and all", h.flatMap(Npc::entity).map(e ->
+                    java.util.Arrays.stream(net.minecraft.world.entity.player.PlayerModelPart.values()).allMatch(((HumanNpc) e)::isModelPartShown)).orElse(false));
             check("human profile name trimmed to 16", h.flatMap(Npc::entity).map(e -> ((HumanNpc) e).getGameProfile().name().length() <= 16).orElse(false));
             // A cached skin must reach the profile through the constructor (properties() is immutable).
             store.putSkin("selftestskin", new NpcStore.Skin(UUID.randomUUID(), "dGVzdA==", "c2ln", 0L));
