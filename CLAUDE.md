@@ -82,8 +82,11 @@ on every path. `Cast.isBrainDriven` is a static both can call.
 ## Layout
 
 ```
-core/    NpcSpec, NpcKind, NpcStore (SavedData: specs + cached skins)
-npc/     HumanNpc, Phantoms (viewer tracking + packets), Bodies (mob bodies), Brains, Skins, Npcs (the manager)
+core/    NpcSpec (incl. scale, clamped 0.0625-16), NpcKind, NpcStore (SavedData: specs + cached skins)
+npc/     HumanNpc, Phantoms (viewer tracking + packets), Bodies (mob bodies), Brains, Skins (account fetches +
+         the cast:skin datapack registry: "<ns>:<name>" is shipped, a bare name is an account), Scale
+         (minecraft:scale + refreshDimensions), Exposure, Gravity, LureGoal, Motion, Equipment, Npcs (the manager)
+CastRegistries  the cast:skin datapack registry (data/<ns>/cast/skin/<name>.json = MineSkin value+signature)
 api/     Cast (facade), Npc (handle), Role, NpcRemovedEvent   <- what other mods import
 neoforge/ CastEvents, CastCommands, CastPermissions, Lang, Feedback, SelfTest
 mixin/   ServerGamePacketListenerImplMixin, InteractPacketAccessor
@@ -113,8 +116,24 @@ upgraded in place), `cast.mixins.json` (`JAVA_25`) and the 26.2 drift:
 - A 26.2 dev server with no player loads **no spawn chunks**; the self-test
   forces a 3x3 around the spawn chunk and keeps every actor inside the middle one.
 
-Both jars sit in `build/libs` side by side (`cast-<ver>+mc<mc>.jar`); Chronicler
+The jars sit in `build/libs` side by side (`cast-<ver>+mc<mc>.jar`); Chronicler
 picks by the `+mc` suffix.
+
+**`mc26.3`** (2026-09-29) is 26.3 on **NeoForge 26.3.0.58-beta** (since 2026-10-08; .33 before),
+MDG 2.0.147, Java 25, run dir `run-mc26.3`, range `[26.3.0.58-beta,26.4)` -- floored at the tested
+build, and the bound must say `-beta` (Maven orders `26.3.0.37-beta` before `26.3.0.37`). FML 12.0.8
+(NeoForge .37-beta+) renamed `ModConfig.Type` `COMMON` -> `LOCAL` (`SERVER` -> `SYNCED`); a jar
+still saying `COMMON` dies there with `NoSuchFieldError` (1.2.1 capped below .37-beta for a week while
+Sable waited). **`LOCAL`'s default file is `cast-local.toml`, so `CastMod` registers with
+`"cast-common.toml"` explicitly** -- otherwise every existing server silently starts from defaults
+(Standards/LegendQuest's trick; Chronicler does the same). On top of the 26.2 drift:
+`DataPackRegistryEvent.NewRegistry`/`dataPackRegistry` -> `NewDatapackRegistryEvent`/`worldRegistry`
+(`CastRegistries`); `setPermanentlyInvulnerable`/`isPermanentlyInvulnerable` for the old
+`setInvulnerable` pair (26.3's `isInvulnerable()` is also true during hurt i-frames, so the old check
+read a hit as "invulnerable"); `swing(hand, SwingAnimation.DEFAULT, bool)` and
+`ClientboundSwingAnimationPacket` for the phantom swing; `ClientboundMoveEntityPacket.PosRot` takes
+a `VecDelta.Linear`; authlib's `ProfileResult` moved to `com.mojang.authlib.services`. The first
+NeoForge .58 setup takes ~19 min per repo on /mnt/d; run 26.x Gradle with `--no-daemon`.
 
 ## The build stamp
 
@@ -128,15 +147,21 @@ absent, never a failure. Same filename, different bytes, is the trap it answers.
 ## Releasing
 
 `mod_version` in `gradle.properties` (the same on every branch), `CHANGELOG.md` with a dated
-heading, the README status line, then commit main, cherry-pick the version commit to `mc26.1`
-and `mc26.2`, build a jar per branch with the right JDK, tag `v<version>` on main, and
-`gh release create` with all three jars attached. Publishing the GitHub release fires
-`.github/workflows/curseforge.yml`, which uploads every attached `cast-*.jar` with the
-Minecraft version read from the `+mc` filename tag, and skips cleanly until
-`CURSEFORGE_TOKEN` / `CURSEFORGE_PROJECT_ID` exist. Modrinth is dropped (2026-09-29: it
+heading, the README status line, then commit main, cherry-pick the version commit to `mc26.1`,
+`mc26.2` and `mc26.3` (docs conflicts: `--ours`), build a jar per branch with the right JDK
+(`--no-daemon` on 26.x), read `Build-Commit` from each manifest (equal to the branch head, no
+`-dirty`), tag `v<version>` on main, push every branch and the tag, and `gh release create` with
+all four jars attached. Publishing the GitHub release fires `.github/workflows/curseforge.yml`,
+which uploads every attached `cast-*.jar` with the Minecraft version read from the `+mc` filename
+tag to CurseForge project 1690287 (live; a 200 is acceptance, moderation follows). Then `./deploy.sh`
+on each branch; it skips the **LegendQuest ZARP** instance (`.sablecraft-no-deploy`, which stays) --
+Sable allows hand-copied jars there until that pack rolls out, after a running check. When
+Chronicler releases the same day, **Cast goes first**: Chronicler's 26.3 file needs a Cast 26.3 file
+on CurseForge to resolve its required dependency. A 26.3-only fix is a 26.3-only point release
+(version bumped on every branch, one jar attached). Modrinth is dropped (2026-09-29: it
 refused every one of Sable's projects as AI content); CurseForge is the one store.
 Never handle the tokens. `CURSEFORGE.md` is the store page; `docs/` holds the artwork
-and screenshots. 1.0.0 shipped 2026-09-12.
+and screenshots. 1.0.0 shipped 2026-09-12; 1.2.2 (2026-10-08) is current on all four lines.
 
 **A CurseForge project's file list is its identity to every other mod.** The app resolves a
 required dependency to the dependency project's newest APPROVED file for that Minecraft version
@@ -185,6 +210,23 @@ uploads `cast-*.jar` only; attach anything else to the GitHub release alone.
   Reaching for a plain `LivingEntity` method on a phantom and expecting a
   client to see it is the trap; a mob body has no such problem (it is a real
   tracked entity, and `Cast.swing`'s mob-body branch is a bare vanilla call).
+- **Anything a client must DRAW on a phantom has to be a synced, NON-DEFAULT entity-data value.**
+  `Phantoms.show` sends `getNonDefaultValues()`; a server-side override of a getter
+  (`isModelPartShown`) convinces nobody but the server. Phantoms drew with no hat, jacket or sleeve
+  layer for a month (ZARP, with the shipped skins: "Sarge is shaved") until `HumanNpc`'s constructor
+  set `Avatar.DATA_PLAYER_MODE_CUSTOMISATION` to every `PlayerModelPart` mask (same field on all
+  four lines). Attributes likewise: a phantom has no tracker, so `show` sends
+  `ClientboundUpdateAttributesPacket` (scale) by hand.
+- **A phantom is never ticked the vanilla way, so a `minecraft:scale` change does not resize its
+  hitbox or eye height** -- `Scale.apply` calls `refreshDimensions()` itself (the self-test caught a
+  0.65 Kit standing in a 1.8 box).
+- **Cast's working tree is normally left on `mc26.2`** (the ZARP instance's line). Check the branch
+  before editing: 1.1.1's edits landed on mc26.2 first and were stashed across to `main`.
+- `/cast skin`, `/cast spawn human`'s skin and `/cast say` are `greedyString()`: `word()` refused the
+  colon in a shipped skin name (`zarp:okafor`).
+- **A new API method is consumed by reflection next door until a floor moves.** Chronicler's
+  `CastGivers` probes `setScale` so an older Cast logs once instead of refusing to start; its Cast
+  floor is still `[1.1.0,)`. Raise a consumer's floor only when a seam needs the method unconditionally.
 
 ## Artwork
 
