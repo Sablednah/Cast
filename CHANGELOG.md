@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Fix: a mob NPC could end up as two bodies ("two Dr Hales in the cell", ZARP, 2026-10-17). A chunk's blocks load before its entities, so for a moment the spot was loaded and the saved body not yet findable; the once-a-second check spawned a fresh one, and the saved one then turned up beside it. Cast now waits for the chunk's entities before re-spawning a body it has had before, and a second marked body for the same NPC is discarded as it joins -- which also clears a pair an older Cast left in a chunk, on the next load.
+
 ## 1.2.2 — 2026-10-08
 
 - **Minecraft 26.3 on NeoForge 26.3.0.58-beta or newer** (it was capped below .37-beta, where NeoForge renamed the config types). Your settings stay in `cast-common.toml`: the new type would otherwise have named the file `cast-local.toml` and started every server on defaults. 26.3.0.36-beta and earlier stay on 1.2.1.
