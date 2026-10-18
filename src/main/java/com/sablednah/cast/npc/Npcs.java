@@ -202,7 +202,7 @@ public final class Npcs {
             // moment isLoaded is true and the saved body is not findable. Spawning then made two Dr Hales in
             // ZARP's cell: the fresh one, then the saved one turning up beside it. Wait for the entities --
             // when there is a saved body to wait for; a never-bodied spec has nothing in the chunk to find.
-            if (spec.entityUuid().isPresent() && !level.areEntitiesLoaded(ChunkPos.pack(BlockPos.containing(spec.pos())))) return;
+            if (spec.entityUuid().isPresent() && !level.areEntitiesLoaded(ChunkPos.asLong(BlockPos.containing(spec.pos())))) return;
             final NpcSpec fresh = spec; // spec is reassigned on the human path above, so the lambda needs a final copy
             Bodies.spawn(level, fresh).ifPresent(mob -> {
                 MOBS.put(fresh.id(), mob);
