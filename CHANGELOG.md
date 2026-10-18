@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.2.3 — 2026-10-18
 
 - Fix: a mob NPC could end up as two bodies ("two Dr Hales in the cell", ZARP, 2026-10-17). A chunk's blocks load before its entities, so for a moment the spot was loaded and the saved body not yet findable; the once-a-second check spawned a fresh one, and the saved one then turned up beside it. Cast now waits for the chunk's entities before re-spawning a body it has had before, and a second marked body for the same NPC is discarded as it joins -- which also clears a pair an older Cast left in a chunk, on the next load.
 
