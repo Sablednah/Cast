@@ -31,6 +31,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.phys.Vec3;
@@ -197,6 +198,11 @@ public final class Npcs {
                 if (spec.lurk().isPresent()) Motion.lurkSecond(server, spec);
                 return;
             }
+            // A chunk's blocks load before its entities (entity storage is a separate, async read), so for a
+            // moment isLoaded is true and the saved body is not findable. Spawning then made two Dr Hales in
+            // ZARP's cell: the fresh one, then the saved one turning up beside it. Wait for the entities --
+            // when there is a saved body to wait for; a never-bodied spec has nothing in the chunk to find.
+            if (spec.entityUuid().isPresent() && !level.areEntitiesLoaded(ChunkPos.pack(BlockPos.containing(spec.pos())))) return;
             final NpcSpec fresh = spec; // spec is reassigned on the human path above, so the lambda needs a final copy
             Bodies.spawn(level, fresh).ifPresent(mob -> {
                 MOBS.put(fresh.id(), mob);
@@ -557,8 +563,19 @@ public final class Npcs {
             mob.discard();
             return;
         }
+        // One npcId, one body. A second marked body for the same NPC -- a saved one arriving after a
+        // re-spawn, or a pair an older Cast left in the chunk -- is an extra, and goes.
+        Mob kept = MOBS.get(id.get());
+        if (kept != null && kept != mob && kept.isAlive() && !kept.isRemoved() && kept.level() == level) {
+            CastMod.LOGGER.info("Cast: extra body {} of NPC {} ({}) discarded on load; keeping {}", mob.getUUID(), id.get(), spec.get().name(), kept.getUUID());
+            mob.discard();
+            return;
+        }
         Bodies.configure(mob, spec.get());
         MOBS.put(id.get(), mob);
+        if (!spec.get().entityUuid().map(mob.getUUID()::equals).orElse(false)) {
+            NpcStore.get(level.getServer()).put(spec.get().withEntityUuid(Optional.of(mob.getUUID())));
+        }
         // A re-joined body has lost whatever goal another mod gave it (goals die with the
         // entity object), so an anchor that mod switched off must not outlive it either.
         UNANCHORED.remove(id.get());
