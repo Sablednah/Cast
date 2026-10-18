@@ -197,6 +197,14 @@ public final class SelfTest {
             Cast.setAnchored(server, zombie, false);
             Npcs.reown(level, reloaded);
             check("reown re-anchors a body whose mover is gone", Npcs.isAnchored(zombie));
+            // Two Dr Hales: a second marked body for the same NPC joining the level (a saved one arriving
+            // after a re-spawn) must be discarded on join, and the NPC must still resolve to the first.
+            {
+                java.util.Optional<Mob> extra = store.get(zombie).flatMap(sp -> com.sablednah.cast.npc.Bodies.spawn(level, sp));
+                check("duplicate body: a second marked body is discarded as it joins", extra.map(m -> m.isRemoved() && m != zb).orElse(false));
+                check("duplicate body: ...and the NPC still resolves to the first", Cast.byId(server, zombie).flatMap(Npc::entity).map(e -> e == zb).orElse(false));
+                check("duplicate body: ...whose UUID the spec still names", store.get(zombie).flatMap(sp -> sp.entityUuid()).map(zb.getUUID()::equals).orElse(false));
+            }
             // Re-anchored in mid-air (a rooftop release): it keeps falling and the landing becomes home, no gag.
             {
                 Vec3 ground = Cast.byId(server, zombie).map(Npc::pos).orElse(home);

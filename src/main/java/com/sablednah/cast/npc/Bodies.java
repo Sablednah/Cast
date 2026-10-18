@@ -23,7 +23,9 @@ import net.minecraft.world.entity.player.Player;
  * Mob bodies: real creatures Cast owns from spawn. Ownership is what lets
  * the goal rebuild be one-way -- there is no "before" to restore. A body is a
  * normal saved entity, so it survives in its chunk; the spec remembers its
- * UUID and re-spawns one if it is gone.
+ * UUID and re-spawns one if it is gone -- once the chunk's entities have
+ * actually been read, since they arrive after its blocks. A second marked
+ * body for one NPC is discarded on join ({@code Npcs.reown}).
  */
 public final class Bodies {
 
