@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.2.4 — unreleased
+## 1.2.4 — 2026-10-20
 
 - Fix: an NPC that threw an error while updating was logged once and then never again, for the rest of the game, including in the next world opened without restarting. The list of NPCs already logged now empties when the server stops. The log line also said the NPC was skipped until restart, when it is retried every tick; it now says so.
 
