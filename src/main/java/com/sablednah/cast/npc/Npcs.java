@@ -137,7 +137,7 @@ public final class Npcs {
                 tickOne(server, spec);
             } catch (RuntimeException e) {
                 if (BROKEN.add(spec.id())) {
-                    CastMod.LOGGER.error("Cast: NPC {} ({}) threw and is skipped until restart or removal -- /cast remove it", spec.id(), spec.name(), e);
+                    CastMod.LOGGER.error("Cast: NPC {} ({}) threw; logged once, still retried every tick -- fix or /cast remove it", spec.id(), spec.name(), e);
                 }
             }
         }
@@ -612,6 +612,8 @@ public final class Npcs {
         Exposure.clear();
         Phantoms.clear();
         ROLES_OFF.clear();
+        // Static, so it outlives the server; the next world in the same game starts clean.
+        BROKEN.clear();
     }
 
     public static int loadedHumans() {
